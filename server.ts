@@ -36,13 +36,19 @@ async function startServer() {
         });
       }
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey =
+        process.env.GEMINI_API_KEY ||
+        process.env.VITE_GEMINI_API_KEY ||
+        process.env.API_KEY;
+
       if (!apiKey || apiKey.trim() === '') {
-        console.error('[Gemini API] Chave GEMINI_API_KEY não encontrada nas variáveis de ambiente.');
+        console.error('[Gemini API] Chave GEMINI_API_KEY / VITE_GEMINI_API_KEY não encontrada nas variáveis de ambiente.');
         return res.status(500).json({
           error: 'Chave de API não configurada',
           statusCode: 500,
-          message: 'A variável de ambiente GEMINI_API_KEY está ausente ou vazia no servidor.',
+          message:
+            'A variável GEMINI_API_KEY ou VITE_GEMINI_API_KEY está ausente ou vazia no ambiente.',
+          tip: 'No Vercel (Settings > Environment Variables), adicione VITE_GEMINI_API_KEY e GEMINI_API_KEY com a sua chave do Google AI Studio e faça um novo deploy.',
         });
       }
 
@@ -87,10 +93,12 @@ async function startServer() {
 
       // Valid and active models list with fallback priority
       const candidateModels = [
-        'gemini-3.1-flash-lite',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
         'gemini-flash-latest',
-        'gemini-3.6-flash',
         'gemini-3.8-flash',
+        'gemini-3.1-flash-lite',
       ];
 
       let lastError: any = null;
@@ -164,11 +172,17 @@ async function startServer() {
         });
       }
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey =
+        process.env.GEMINI_API_KEY ||
+        process.env.VITE_GEMINI_API_KEY ||
+        process.env.API_KEY;
+
       if (!apiKey || apiKey.trim() === '') {
         return res.status(500).json({
           error: 'Chave de API não configurada',
-          message: 'A variável de ambiente GEMINI_API_KEY está ausente no servidor.',
+          message:
+            'A variável GEMINI_API_KEY ou VITE_GEMINI_API_KEY está ausente no ambiente.',
+          tip: 'No Vercel (Settings > Environment Variables), adicione VITE_GEMINI_API_KEY com a sua chave.',
         });
       }
 
@@ -246,10 +260,12 @@ Importante:
       });
 
       const candidateModels = [
-        'gemini-3.1-flash-lite',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
         'gemini-flash-latest',
-        'gemini-3.6-flash',
         'gemini-3.8-flash',
+        'gemini-3.1-flash-lite',
       ];
 
       let lastError: any = null;

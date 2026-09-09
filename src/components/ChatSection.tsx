@@ -17,6 +17,7 @@ import {
   saveChatMessages,
   clearChatMessages,
 } from '../utils/storage';
+import { sendChatMessage } from '../services/geminiClient';
 
 const INITIAL_GREETING: ChatMessage = {
   id: 'greeting-msg',
@@ -95,86 +96,35 @@ export function ChatSection() {
         apiContext = apiContext.slice(firstUserIdx);
       }
 
-      // Send conversation history context to backend /api/chat
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: apiContext.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      });
+      // Send conversation history context to Gemini API (via server or client fallback)
+      const { reply } = await sendChatMessage(
+        apiContext.map((m) => ({
+          role: m.role,
+          content: m.content,
+        }))
+      );
 
-      if (!response.ok) {
-        let errorStatusCode: number | string = response.status;
-        let errorMessage = response.statusText;
-        let errorDetails = '';
-
-        try {
-          const errJson = await response.json();
-          errorStatusCode = errJson.statusCode || response.status;
-          errorMessage = errJson.message || errJson.error || response.statusText;
-          if (errJson.modelsAttempted) {
-            errorDetails = `Modelos testados: ${errJson.modelsAttempted.join(', ')}`;
-          }
-        } catch {
-          const text = await response.text().catch(() => '');
-          if (text) errorMessage = text;
-        }
-
-        console.error('[Chat Error da API Gemini]:', {
-          status: errorStatusCode,
-          message: errorMessage,
-          details: errorDetails,
-        });
-
-        const fullErrorDisplay = `Erro na API Gemini (Status ${errorStatusCode}): ${errorMessage}${
-          errorDetails ? `\n\nDetalhes: ${errorDetails}` : ''
-        }`;
-
-        const errorMessageObj: ChatMessage = {
-          id: 'msg-' + Date.now() + '-err',
-          role: 'assistant',
-          content: fullErrorDisplay,
-          timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          isError: true,
-          errorCode: errorStatusCode,
-          errorDetails: errorDetails || undefined,
-        };
-        const updatedWithError = [...newMessages, errorMessageObj];
-        setMessages(updatedWithError);
-        saveChatMessages(updatedWithError);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.reply) {
+      if (reply) {
         const assistantMessage: ChatMessage = {
           id: 'msg-' + Date.now() + '-bot',
           role: 'assistant',
-          content: data.reply,
+          content: reply,
           timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         };
         const updatedWithReply = [...newMessages, assistantMessage];
         setMessages(updatedWithReply);
         saveChatMessages(updatedWithReply);
-      } else {
-        throw new Error(data.error || 'Resposta vazia da API');
       }
     } catch (err: any) {
       console.error('Erro ao enviar mensagem:', err);
+      const fullError = err?.message || 'Falha na comunicação com o serviço de IA.';
       const errorMessage: ChatMessage = {
         id: 'msg-' + Date.now() + '-err',
         role: 'assistant',
-        content: `Erro na comunicação com a API: ${err?.message || 'Falha na conexão.'}`,
+        content: fullError,
         timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         isError: true,
-        errorCode: 'Network/Client',
+        errorCode: 'API_ERROR',
       };
       const updatedWithError = [...newMessages, errorMessage];
       setMessages(updatedWithError);

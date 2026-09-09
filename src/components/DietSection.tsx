@@ -8,6 +8,7 @@ import {
 } from '../utils/storage';
 import { Modal } from './Modal';
 import { ConfirmModal } from './ConfirmModal';
+import { estimateNutrition } from '../services/geminiClient';
 import {
   Utensils,
   Plus,
@@ -343,23 +344,7 @@ export const DietSection: React.FC<DietSectionProps> = ({ meals, onUpdateMeals }
     setEstimateError(null);
 
     try {
-      const response = await fetch('/api/estimate-nutrition', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: aiDescription.trim() }),
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const errorMsg =
-          data?.message ||
-          data?.error ||
-          'Não foi possível estimar os nutrientes do alimento informado. Tente descrever com mais detalhes ou preencha manualmente.';
-        setEstimateError(errorMsg);
-        setIsEstimating(false);
-        return;
-      }
+      const data = await estimateNutrition({ text: aiDescription.trim() });
 
       // Check if IA is requesting clarification for regional dishes or ingredients
       if (data?.type === 'clarification' && data?.question) {
@@ -383,7 +368,8 @@ export const DietSection: React.FC<DietSectionProps> = ({ meals, onUpdateMeals }
     } catch (err: any) {
       console.error('Erro na requisição de estimativa:', err);
       setEstimateError(
-        'Não foi possível conectar com o serviço de IA. Tente novamente ou use o preenchimento manual.'
+        err?.message ||
+          'Não foi possível conectar com o serviço de IA. Tente novamente ou use o preenchimento manual.'
       );
     } finally {
       setIsEstimating(false);
@@ -407,26 +393,10 @@ export const DietSection: React.FC<DietSectionProps> = ({ meals, onUpdateMeals }
     setAiFollowUpInput('');
 
     try {
-      const response = await fetch('/api/estimate-nutrition', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: followUpText,
-          history: currentConv,
-        }),
+      const data = await estimateNutrition({
+        text: followUpText,
+        history: currentConv,
       });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const errorMsg =
-          data?.message ||
-          data?.error ||
-          'Não foi possível estimar os nutrientes com essas informações. Tente detalhar mais ou use o modo manual.';
-        setEstimateError(errorMsg);
-        setIsEstimating(false);
-        return;
-      }
 
       // If IA needs another clarification
       if (data?.type === 'clarification' && data?.question) {
@@ -449,7 +419,8 @@ export const DietSection: React.FC<DietSectionProps> = ({ meals, onUpdateMeals }
     } catch (err: any) {
       console.error('Erro na requisição de esclarecimento:', err);
       setEstimateError(
-        'Não foi possível conectar com o serviço de IA. Tente novamente ou use o preenchimento manual.'
+        err?.message ||
+          'Não foi possível conectar com o serviço de IA. Tente novamente ou use o preenchimento manual.'
       );
     } finally {
       setIsEstimating(false);
