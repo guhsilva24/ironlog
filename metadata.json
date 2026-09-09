@@ -1,0 +1,6 @@
+{
+  "name": "IronLog",
+  "description": "IronLog - Aplicativo para organizar rotina de treinos semanais, planejamento de refeições, controle diário de água e assistente de musculação e nutrição esportiva.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
