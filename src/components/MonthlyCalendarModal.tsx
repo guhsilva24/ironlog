@@ -417,7 +417,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
             type="button"
             onClick={onClose}
             aria-label="Fechar calendário"
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
+            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -432,7 +432,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
                 type="button"
                 onClick={handlePrevMonth}
                 aria-label="Mês anterior"
-                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -443,7 +443,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
                 type="button"
                 onClick={handleNextMonth}
                 aria-label="Próximo mês"
-                className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -452,7 +452,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
             <button
               type="button"
               onClick={handleGoToToday}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+              className="px-3.5 py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
             >
               Hoje
             </button>
@@ -780,7 +780,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
                   onClose();
                   onNavigateToDiet(selectedDate);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
               >
                 <Utensils className="w-3.5 h-3.5" />
                 <span>Ver nutrição deste dia</span>
@@ -792,7 +792,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
                   onClose();
                   onNavigateToWorkout(selectedDate);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white shadow-xs transition-colors cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white shadow-xs transition-colors cursor-pointer"
               >
                 <Dumbbell className="w-3.5 h-3.5" />
                 <span>Ver treino deste dia</span>
@@ -801,7 +801,7 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
               <button
                 type="button"
                 onClick={handleAskAiAboutDay}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white shadow-xs transition-colors cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white shadow-xs transition-colors cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Perguntar à IA sobre este dia</span>

@@ -12,6 +12,7 @@ import {
   loadWaterHistory,
   loadNutritionHistory,
   calculateNutritionTotals,
+  loadWorkoutDaysHistory,
 } from '../utils/storage';
 import { useChat } from '../context/ChatContext';
 import {
@@ -50,12 +51,14 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({ appData, onNav
 
   // Carregar dados dos históricos
   const allWorkouts = loadWorkoutHistory();
+  const allWorkoutDays = loadWorkoutDaysHistory();
   const allWater = loadWaterHistory();
   const allNutrition = loadNutritionHistory();
   const allSummaries = loadDailySummaries();
 
   // Filtrar dados no período
   const periodWorkouts = allWorkouts.filter((w) => w.date >= startStr && w.date <= todayStr);
+  const periodWorkoutDays = allWorkoutDays.filter((wd) => wd.date >= startStr && wd.date <= todayStr);
   const periodWater = allWater.filter((w) => w.date >= startStr && w.date <= todayStr);
   const periodNutrition = allNutrition.filter((n) => n.date >= startStr && n.date <= todayStr);
   const periodSummaries = allSummaries.filter((s) => s.date >= startStr && s.date <= todayStr);
@@ -134,6 +137,22 @@ export const ProgressSection: React.FC<ProgressSectionProps> = ({ appData, onNav
     if (day) {
       day.volume += calculateExerciseVolume(w.sets, w.reps, w.weight);
       if (day.workoutCount === 0) day.workoutCount++;
+    }
+  });
+
+  periodWorkoutDays.forEach((wd) => {
+    const day = daysMap.get(wd.date);
+    if (day) {
+      if (wd.exercises && wd.exercises.length > 0) {
+        if (day.workoutCount === 0) day.workoutCount = wd.exercises.length;
+        if (day.volume === 0) {
+          wd.exercises.forEach((ex) => {
+            day.volume += calculateExerciseVolume(ex.sets, ex.reps, ex.weight);
+          });
+        }
+      } else if (wd.completed && day.workoutCount === 0) {
+        day.workoutCount = 1;
+      }
     }
   });
 

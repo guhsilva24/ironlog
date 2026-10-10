@@ -273,6 +273,11 @@ export function archiveWorkoutDaySession(
         }))
     );
 
+    // Se não houve atividade (sem treino concluído, sem cardio e sem exercícios feitos), não salva registro vazio
+    if (!status.completed && !status.cardio?.done && doneExercisesWithFailure.length === 0) {
+      return;
+    }
+
     const entry: DailyWorkoutDaysHistory = {
       date: dateStr,
       completed: !!status.completed,
@@ -345,6 +350,7 @@ export function saveWaterHistory(history: DailyWaterHistory[]): void {
 
 export function archiveWaterDay(dateStr: string, totalMl: number, goalMl: number): void {
   try {
+    if (totalMl <= 0) return; // Se não houve consumo de água, não arquiva registro vazio
     const history = loadWaterHistory();
     const entry: DailyWaterHistory = {
       date: dateStr,
@@ -406,6 +412,11 @@ export function archiveDailySummary(
       (acc, d) => acc + d.exercises.filter((e) => e.done).length,
       0
     );
+
+    // Se o dia não teve nenhuma atividade registrada, não salva resumo vazio
+    if (exercisesDoneCount === 0 && totals.consumedCalories === 0 && (water.currentMl || 0) === 0) {
+      return;
+    }
 
     const entry: DailySummaryRecord = {
       date: dateStr,
@@ -609,7 +620,12 @@ export function saveAppData(data: AppData): void {
 export function exportDataAsJson(data: AppData): void {
   const exportPayload = {
     ...data,
+    treino: data.workoutDays,
+    workoutDays: data.workoutDays,
+    metas: data.nutritionGoals || {},
+    nutritionGoals: data.nutritionGoals || {},
     nutritionHistory: loadNutritionHistory(),
+    nutricao_historico: loadNutritionHistory(),
     workoutHistory: loadWorkoutHistory(),
     treino_historico: loadWorkoutHistory(),
     workoutDaysHistory: loadWorkoutDaysHistory(),
@@ -618,6 +634,11 @@ export function exportDataAsJson(data: AppData): void {
     agua_historico: loadWaterHistory(),
     dailySummaries: loadDailySummaries(),
     resumo_diario: loadDailySummaries(),
+    chat_history: loadChatMessages(),
+    chat_pending: loadChatPending(),
+    tema: (typeof window !== 'undefined' ? localStorage.getItem('app_theme') : null) || 'light',
+    share_data_with_ai: getShareDataWithAi(),
+    treino_dia_status: loadDailyWorkoutStatus(),
   };
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
   const downloadAnchor = document.createElement('a');

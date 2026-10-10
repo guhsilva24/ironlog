@@ -14,6 +14,16 @@ import {
   clearDailySummaries,
   saveWorkoutDaysHistory,
   clearWorkoutDaysHistory,
+  clearChatMessages,
+  clearChatPending,
+  saveChatMessages,
+  saveChatPending,
+  resetDailyWorkoutStatus,
+  saveDailyWorkoutStatus,
+  setShareDataWithAi,
+  INITIAL_DAYS,
+  INITIAL_MEALS,
+  INITIAL_WATER,
 } from '../utils/storage';
 import { saveWorkoutHistory, clearWorkoutHistory } from '../utils/workoutHistory';
 import {
@@ -157,12 +167,17 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
             logs: [],
             lastDate: getTodayDateString(),
           },
+          nutritionGoals: {},
           lastActiveDate: getTodayDateString(),
         };
         clearWorkoutHistory();
         clearWorkoutDaysHistory();
+        saveNutritionHistory([]);
         clearWaterHistory();
         clearDailySummaries();
+        clearChatMessages();
+        clearChatPending();
+        resetDailyWorkoutStatus();
         onUpdateAppData(blankData);
       },
     });
@@ -192,36 +207,106 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (parsed.workoutDays && parsed.meals && parsed.water) {
-          saveAppData(parsed);
+        if (parsed && typeof parsed === 'object') {
+          // Aceita backups legados ou novos garantindo valores padrão para chaves faltantes
+          const workoutDays = Array.isArray(parsed.workoutDays)
+            ? parsed.workoutDays
+            : Array.isArray(parsed.treino)
+            ? parsed.treino
+            : INITIAL_DAYS;
+
+          const meals = Array.isArray(parsed.meals) ? parsed.meals : INITIAL_MEALS;
+
+          const water =
+            parsed.water && typeof parsed.water === 'object' && typeof parsed.water.currentMl === 'number'
+              ? parsed.water
+              : INITIAL_WATER;
+
+          const nutritionGoals =
+            parsed.nutritionGoals && typeof parsed.nutritionGoals === 'object'
+              ? parsed.nutritionGoals
+              : parsed.metas && typeof parsed.metas === 'object'
+              ? parsed.metas
+              : {};
+
+          const restoredData: AppData = {
+            version: 1,
+            workoutDays,
+            meals,
+            water,
+            nutritionGoals,
+            lastActiveDate: parsed.lastActiveDate || getTodayDateString(),
+          };
+
+          saveAppData(restoredData);
+
+          // Restaura todos os históricos com suporte a nomes em inglês ou português
           if (Array.isArray(parsed.nutritionHistory)) {
             saveNutritionHistory(parsed.nutritionHistory);
+          } else if (Array.isArray(parsed.nutricao_historico)) {
+            saveNutritionHistory(parsed.nutricao_historico);
           }
+
           if (Array.isArray(parsed.workoutHistory)) {
             saveWorkoutHistory(parsed.workoutHistory);
           } else if (Array.isArray(parsed.treino_historico)) {
             saveWorkoutHistory(parsed.treino_historico);
           }
+
           if (Array.isArray(parsed.workoutDaysHistory)) {
             saveWorkoutDaysHistory(parsed.workoutDaysHistory);
           } else if (Array.isArray(parsed.treino_dias_historico)) {
             saveWorkoutDaysHistory(parsed.treino_dias_historico);
           }
+
           if (Array.isArray(parsed.waterHistory)) {
             saveWaterHistory(parsed.waterHistory);
           } else if (Array.isArray(parsed.agua_historico)) {
             saveWaterHistory(parsed.agua_historico);
           }
+
           if (Array.isArray(parsed.dailySummaries)) {
             saveDailySummaries(parsed.dailySummaries);
           } else if (Array.isArray(parsed.resumo_diario)) {
             saveDailySummaries(parsed.resumo_diario);
           }
-          onUpdateAppData(parsed);
+
+          // Restaura chat, status diário, tema e compartilhamento com IA
+          if (Array.isArray(parsed.chat_history)) {
+            saveChatMessages(parsed.chat_history);
+          } else if (Array.isArray(parsed.chatMessages)) {
+            saveChatMessages(parsed.chatMessages);
+          }
+
+          if (parsed.chat_pending && typeof parsed.chat_pending === 'object') {
+            saveChatPending(parsed.chat_pending);
+          }
+
+          if (typeof parsed.share_data_with_ai === 'boolean') {
+            setShareDataWithAi(parsed.share_data_with_ai);
+          }
+
+          if (parsed.treino_dia_status && typeof parsed.treino_dia_status === 'object') {
+            saveDailyWorkoutStatus(parsed.treino_dia_status);
+          }
+
+          const importedTheme = parsed.tema || parsed.theme || parsed.app_theme;
+          if (importedTheme === 'dark' || importedTheme === 'light') {
+            try {
+              localStorage.setItem('app_theme', importedTheme);
+              if (importedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            } catch (e) {}
+          }
+
+          onUpdateAppData(restoredData);
           setConfirmModal({
             isOpen: true,
             title: 'Backup Restaurado',
-            message: 'Seus dados, histórico de nutrição, treinos e água foram restaurados com sucesso!',
+            message: 'Todos os seus dados (treinos, nutrição, água, metas, histórico e chat) foram restaurados com sucesso!',
             confirmLabel: 'Entendido',
             isAlertOnly: true,
             onConfirm: () => {},

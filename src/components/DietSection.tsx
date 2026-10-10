@@ -853,16 +853,16 @@ export const DietSection: React.FC<DietSectionProps> = ({
               </button>
             )}
 
-            {isPastDay && !isEditingPastDay && hasPastRecord && (
+            {isPastDay && !isEditingPastDay && (
               <button
                 id="edit-past-day-btn"
                 type="button"
-                onClick={() => setIsEditingPastDay(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors cursor-pointer shadow-xs"
-                title="Permite editar os alimentos deste dia passado"
+                onClick={hasPastRecord ? () => setIsEditingPastDay(true) : handleInitPastDayRecord}
+                className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors cursor-pointer shadow-xs"
+                title="Permite registrar ou editar os alimentos deste dia passado"
               >
                 <Edit2 className="w-3.5 h-3.5" />
-                Editar este dia
+                {hasPastRecord ? 'Editar este dia' : 'Registrar neste dia'}
               </button>
             )}
 
