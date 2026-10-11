@@ -274,11 +274,33 @@ export const DietSection: React.FC<DietSectionProps> = ({
   // Manual / Edit food states
   const [foodName, setFoodName] = useState('');
   const [foodQuantity, setFoodQuantity] = useState('');
+  const [foodQuantityG, setFoodQuantityG] = useState<string>('');
   const [foodCalories, setFoodCalories] = useState<string>('');
   const [foodProtein, setFoodProtein] = useState<string>('');
   const [foodCarbs, setFoodCarbs] = useState<string>('');
   const [foodFat, setFoodFat] = useState<string>('');
+  const [foodFiber, setFoodFiber] = useState<string>('');
+  const [foodSodium, setFoodSodium] = useState<string>('');
+  const [foodConfidence, setFoodConfidence] = useState<'alta' | 'media' | 'baixa'>('alta');
+  const [foodBase, setFoodBase] = useState<'taco' | 'rotulo' | 'estimativa'>('taco');
+  const [foodKcal100, setFoodKcal100] = useState<number | undefined>(undefined);
+  const [foodP100, setFoodP100] = useState<number | undefined>(undefined);
+  const [foodC100, setFoodC100] = useState<number | undefined>(undefined);
+  const [foodG100, setFoodG100] = useState<number | undefined>(undefined);
+  const [foodRecalcHint, setFoodRecalcHint] = useState<boolean>(false);
   const [foodNotes, setFoodNotes] = useState('');
+
+  // Rótulo Mode states
+  const [useLabelTable, setUseLabelTable] = useState(false);
+  const [labelPortionBasis, setLabelPortionBasis] = useState<'100g' | 'custom'>('100g');
+  const [labelPortionSizeG, setLabelPortionSizeG] = useState<string>('100');
+  const [labelKcal, setLabelKcal] = useState<string>('');
+  const [labelProtein, setLabelProtein] = useState<string>('');
+  const [labelCarbs, setLabelCarbs] = useState<string>('');
+  const [labelFat, setLabelFat] = useState<string>('');
+  const [labelFiber, setLabelFiber] = useState<string>('');
+  const [labelSodium, setLabelSodium] = useState<string>('');
+  const [labelConsumedG, setLabelConsumedG] = useState<string>('');
 
   // In-app confirmation / alert modal state (never uses window.confirm or window.alert)
   const [confirmModal, setConfirmModal] = useState<{
@@ -422,11 +444,31 @@ export const DietSection: React.FC<DietSectionProps> = ({
     setEstimateError(null);
     setFoodName('');
     setFoodQuantity('');
+    setFoodQuantityG('');
     setFoodCalories('');
     setFoodProtein('');
     setFoodCarbs('');
     setFoodFat('');
+    setFoodFiber('');
+    setFoodSodium('');
+    setFoodConfidence('alta');
+    setFoodBase('taco');
+    setFoodKcal100(undefined);
+    setFoodP100(undefined);
+    setFoodC100(undefined);
+    setFoodG100(undefined);
+    setFoodRecalcHint(false);
     setFoodNotes('');
+    setUseLabelTable(false);
+    setLabelPortionBasis('100g');
+    setLabelPortionSizeG('100');
+    setLabelKcal('');
+    setLabelProtein('');
+    setLabelCarbs('');
+    setLabelFat('');
+    setLabelFiber('');
+    setLabelSodium('');
+    setLabelConsumedG('');
     setIsFoodModalOpen(true);
   };
 
@@ -441,11 +483,31 @@ export const DietSection: React.FC<DietSectionProps> = ({
     setEstimateError(null);
     setFoodName(food.name);
     setFoodQuantity(food.quantity);
+    setFoodQuantityG(food.quantidade_g !== undefined ? String(food.quantidade_g) : '');
     setFoodCalories(food.calories !== undefined ? String(food.calories) : '');
     setFoodProtein(food.protein !== undefined ? String(food.protein) : '');
     setFoodCarbs(food.carbs !== undefined ? String(food.carbs) : '');
     setFoodFat(food.fat !== undefined ? String(food.fat) : '');
+    setFoodFiber(food.fibra_g !== undefined ? String(food.fibra_g) : '');
+    setFoodSodium(food.sodio_mg !== undefined ? String(food.sodio_mg) : '');
+    setFoodConfidence(food.confianca || 'alta');
+    setFoodBase(food.base || 'taco');
+    setFoodKcal100(food.kcal100);
+    setFoodP100(food.p100);
+    setFoodC100(food.c100);
+    setFoodG100(food.g100);
+    setFoodRecalcHint(false);
     setFoodNotes(food.notes || '');
+    setUseLabelTable(false);
+    setLabelPortionBasis('100g');
+    setLabelPortionSizeG('100');
+    setLabelKcal('');
+    setLabelProtein('');
+    setLabelCarbs('');
+    setLabelFat('');
+    setLabelFiber('');
+    setLabelSodium('');
+    setLabelConsumedG('');
     setIsFoodModalOpen(true);
   };
 
@@ -465,6 +527,15 @@ export const DietSection: React.FC<DietSectionProps> = ({
       protein: typeof item.proteina_g === 'number' ? item.proteina_g : undefined,
       carbs: typeof item.carboidrato_g === 'number' ? item.carboidrato_g : undefined,
       fat: typeof item.gordura_g === 'number' ? item.gordura_g : undefined,
+      quantidade_g: typeof item.quantidade_g === 'number' ? item.quantidade_g : undefined,
+      fibra_g: typeof item.fibra_g === 'number' ? item.fibra_g : undefined,
+      sodio_mg: typeof item.sodio_mg === 'number' ? item.sodio_mg : undefined,
+      confianca: item.confianca || 'alta',
+      base: item.base || 'taco',
+      kcal100: typeof item.kcal100 === 'number' ? item.kcal100 : undefined,
+      p100: typeof item.p100 === 'number' ? item.p100 : undefined,
+      c100: typeof item.c100 === 'number' ? item.c100 : undefined,
+      g100: typeof item.g100 === 'number' ? item.g100 : undefined,
       notes: item.observacao || item.notes || undefined,
       done: false,
     }));
@@ -583,15 +654,95 @@ export const DietSection: React.FC<DietSectionProps> = ({
     setEstimateError(null);
   };
 
+  // Handler para recálculo proporcional quando o usuário altera os gramas do alimento
+  const handleQuantityGChange = (valStr: string) => {
+    setFoodQuantityG(valStr);
+    const newG = Number(valStr);
+
+    // Se temos valores por 100g, recalcula automaticamente
+    if (newG > 0 && foodKcal100 !== undefined) {
+      const factor = newG / 100;
+      setFoodCalories(String(Math.round(foodKcal100 * factor)));
+      if (foodP100 !== undefined) setFoodProtein(String(Math.round(foodP100 * factor * 10) / 10));
+      if (foodC100 !== undefined) setFoodCarbs(String(Math.round(foodC100 * factor * 10) / 10));
+      if (foodG100 !== undefined) setFoodFat(String(Math.round(foodG100 * factor * 10) / 10));
+      setFoodRecalcHint(true);
+    } else if (newG > 0 && editingFood && editingFood.quantidade_g && editingFood.quantidade_g > 0) {
+      // Cria a base de 100g dinamicamente a partir dos valores originais se ainda não existia
+      const origG = editingFood.quantidade_g;
+      const factor100 = 100 / origG;
+      const k100 = editingFood.calories !== undefined ? Math.round(editingFood.calories * factor100) : undefined;
+      const p100 = editingFood.protein !== undefined ? Math.round(editingFood.protein * factor100 * 10) / 10 : undefined;
+      const c100 = editingFood.carbs !== undefined ? Math.round(editingFood.carbs * factor100 * 10) / 10 : undefined;
+      const g100 = editingFood.fat !== undefined ? Math.round(editingFood.fat * factor100 * 10) / 10 : undefined;
+
+      setFoodKcal100(k100);
+      setFoodP100(p100);
+      setFoodC100(c100);
+      setFoodG100(g100);
+
+      if (k100 !== undefined) {
+        const factor = newG / 100;
+        setFoodCalories(String(Math.round(k100 * factor)));
+        if (p100 !== undefined) setFoodProtein(String(Math.round(p100 * factor * 10) / 10));
+        if (c100 !== undefined) setFoodCarbs(String(Math.round(c100 * factor * 10) / 10));
+        if (g100 !== undefined) setFoodFat(String(Math.round(g100 * factor * 10) / 10));
+        setFoodRecalcHint(true);
+      }
+    }
+  };
+
+  // Helper para calcular a partir do rótulo
+  const handleCalculateFromLabel = () => {
+    const consumedG = Number(labelConsumedG);
+    const portionG = labelPortionBasis === '100g' ? 100 : Number(labelPortionSizeG) || 100;
+
+    if (portionG <= 0 || consumedG <= 0) return;
+
+    const factor = consumedG / portionG;
+    const factor100 = 100 / portionG;
+
+    const rawKcal = labelKcal.trim() !== '' ? Number(labelKcal) : undefined;
+    const rawProt = labelProtein.trim() !== '' ? Number(labelProtein) : undefined;
+    const rawCarbs = labelCarbs.trim() !== '' ? Number(labelCarbs) : undefined;
+    const rawFat = labelFat.trim() !== '' ? Number(labelFat) : undefined;
+    const rawFib = labelFiber.trim() !== '' ? Number(labelFiber) : undefined;
+    const rawSod = labelSodium.trim() !== '' ? Number(labelSodium) : undefined;
+
+    if (rawKcal !== undefined) setFoodCalories(String(Math.round(rawKcal * factor)));
+    if (rawProt !== undefined) setFoodProtein(String(Math.round(rawProt * factor * 10) / 10));
+    if (rawCarbs !== undefined) setFoodCarbs(String(Math.round(rawCarbs * factor * 10) / 10));
+    if (rawFat !== undefined) setFoodFat(String(Math.round(rawFat * factor * 10) / 10));
+    if (rawFib !== undefined) setFoodFiber(String(Math.round(rawFib * factor * 10) / 10));
+    if (rawSod !== undefined) setFoodSodium(String(Math.round(rawSod * factor)));
+
+    // Guarda a base por 100g
+    setFoodKcal100(rawKcal !== undefined ? Math.round(rawKcal * factor100) : undefined);
+    setFoodP100(rawProt !== undefined ? Math.round(rawProt * factor100 * 10) / 10 : undefined);
+    setFoodC100(rawCarbs !== undefined ? Math.round(rawCarbs * factor100 * 10) / 10 : undefined);
+    setFoodG100(rawFat !== undefined ? Math.round(rawFat * factor100 * 10) / 10 : undefined);
+
+    setFoodQuantityG(String(consumedG));
+    if (!foodQuantity.trim()) {
+      setFoodQuantity(`${consumedG}g`);
+    }
+    setFoodConfidence('alta');
+    setFoodBase('rotulo');
+    setUseLabelTable(false);
+  };
+
   // Save food item manually (or when editing)
   const handleSaveFoodManual = (e: React.FormEvent) => {
     e.preventDefault();
     if (!foodName.trim()) return;
 
     const calNum = foodCalories.trim() !== '' ? Math.max(0, Math.round(Number(foodCalories) || 0)) : undefined;
-    const protNum = foodProtein.trim() !== '' ? Math.max(0, Math.round(Number(foodProtein) || 0)) : undefined;
-    const carbsNum = foodCarbs.trim() !== '' ? Math.max(0, Math.round(Number(foodCarbs) || 0)) : undefined;
-    const fatNum = foodFat.trim() !== '' ? Math.max(0, Math.round(Number(foodFat) || 0)) : undefined;
+    const protNum = foodProtein.trim() !== '' ? Math.max(0, Math.round(Number(foodProtein) * 10) / 10) : undefined;
+    const carbsNum = foodCarbs.trim() !== '' ? Math.max(0, Math.round(Number(foodCarbs) * 10) / 10) : undefined;
+    const fatNum = foodFat.trim() !== '' ? Math.max(0, Math.round(Number(foodFat) * 10) / 10) : undefined;
+    const fibNum = foodFiber.trim() !== '' ? Math.max(0, Math.round(Number(foodFiber) * 10) / 10) : undefined;
+    const sodNum = foodSodium.trim() !== '' ? Math.max(0, Math.round(Number(foodSodium))) : undefined;
+    const qtdGNum = foodQuantityG.trim() !== '' ? Math.max(0, Number(foodQuantityG)) : undefined;
 
     if (editingFood) {
       // Edit food across all meals to guarantee finding and updating the exact item
@@ -602,11 +753,20 @@ export const DietSection: React.FC<DietSectionProps> = ({
             ? {
                 ...item,
                 name: foodName.trim(),
-                quantity: foodQuantity.trim() || 'A gosto',
+                quantity: foodQuantity.trim() || (qtdGNum ? `${qtdGNum}g` : 'A gosto'),
+                quantidade_g: qtdGNum,
                 calories: calNum,
                 protein: protNum,
                 carbs: carbsNum,
                 fat: fatNum,
+                fibra_g: fibNum,
+                sodio_mg: sodNum,
+                confianca: foodConfidence,
+                base: foodBase,
+                kcal100: foodKcal100,
+                p100: foodP100,
+                c100: foodC100,
+                g100: foodG100,
                 notes: foodNotes.trim() || undefined,
               }
             : item
@@ -618,11 +778,20 @@ export const DietSection: React.FC<DietSectionProps> = ({
       const newItem: FoodItem = {
         id: 'food-' + Date.now(),
         name: foodName.trim(),
-        quantity: foodQuantity.trim() || 'A gosto',
+        quantity: foodQuantity.trim() || (qtdGNum ? `${qtdGNum}g` : 'A gosto'),
+        quantidade_g: qtdGNum,
         calories: calNum,
         protein: protNum,
         carbs: carbsNum,
         fat: fatNum,
+        fibra_g: fibNum,
+        sodio_mg: sodNum,
+        confianca: foodConfidence,
+        base: foodBase,
+        kcal100: foodKcal100,
+        p100: foodP100,
+        c100: foodC100,
+        g100: foodG100,
         notes: foodNotes.trim() || undefined,
         done: false,
       };
@@ -708,10 +877,14 @@ export const DietSection: React.FC<DietSectionProps> = ({
   let totalProtein = 0;
   let totalCarbs = 0;
   let totalFat = 0;
+  let totalFiber = 0;
+  let totalSodium = 0;
   let consumedCalories = 0;
   let consumedProtein = 0;
   let consumedCarbs = 0;
   let consumedFat = 0;
+  let consumedFiber = 0;
+  let consumedSodium = 0;
 
   activeMeals.forEach((m) => {
     m.items.forEach((item) => {
@@ -720,6 +893,8 @@ export const DietSection: React.FC<DietSectionProps> = ({
       if (item.protein) totalProtein += item.protein;
       if (item.carbs) totalCarbs += item.carbs;
       if (item.fat) totalFat += item.fat;
+      if (item.fibra_g) totalFiber += item.fibra_g;
+      if (item.sodio_mg) totalSodium += item.sodio_mg;
 
       if (item.done) {
         doneItems++;
@@ -727,6 +902,8 @@ export const DietSection: React.FC<DietSectionProps> = ({
         if (item.protein) consumedProtein += item.protein;
         if (item.carbs) consumedCarbs += item.carbs;
         if (item.fat) consumedFat += item.fat;
+        if (item.fibra_g) consumedFiber += item.fibra_g;
+        if (item.sodio_mg) consumedSodium += item.sodio_mg;
       }
     });
   });
@@ -989,6 +1166,23 @@ export const DietSection: React.FC<DietSectionProps> = ({
               </div>
             </div>
 
+            {(totalFiber > 0 || totalSodium > 0) && (
+              <div className="flex flex-wrap items-center gap-2 mt-2.5 pt-2 border-t border-slate-100 text-xs">
+                {totalFiber > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 border border-teal-200/70 font-semibold">
+                    🌾 Fibras: {Math.round(totalFiber * 10) / 10}g
+                    {consumedFiber > 0 && <span className="font-normal text-teal-600">({Math.round(consumedFiber * 10) / 10}g ingeridas)</span>}
+                  </span>
+                )}
+                {totalSodium > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
+                    🧂 Sódio: {Math.round(totalSodium)}mg
+                    {consumedSodium > 0 && <span className="font-normal text-slate-500">({Math.round(consumedSodium)}mg ingerido)</span>}
+                  </span>
+                )}
+              </div>
+            )}
+
             <p className="text-[11px] text-slate-400 mt-2 text-right">
               * Valores são estimativas geradas por IA e podem não ser exatos.
             </p>
@@ -1223,8 +1417,10 @@ export const DietSection: React.FC<DietSectionProps> = ({
                 protein: acc.protein + (item.protein || 0),
                 carbs: acc.carbs + (item.carbs || 0),
                 fat: acc.fat + (item.fat || 0),
+                fiber: acc.fiber + (item.fibra_g || 0),
+                sodium: acc.sodium + (item.sodio_mg || 0),
               }),
-              { calories: 0, protein: 0, carbs: 0, fat: 0 }
+              { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0 }
             );
 
             return (
@@ -1281,7 +1477,7 @@ export const DietSection: React.FC<DietSectionProps> = ({
 
                     {/* Meal Macros Summary Badge */}
                     {mealTotals.calories > 0 && (
-                      <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60">
+                      <div className="inline-flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60">
                         <span className="font-bold text-amber-700">{mealTotals.calories} kcal</span>
                         <span className="text-slate-300">·</span>
                         <span className="text-blue-700 font-semibold">{mealTotals.protein}g P</span>
@@ -1289,6 +1485,18 @@ export const DietSection: React.FC<DietSectionProps> = ({
                         <span className="text-emerald-700 font-semibold">{mealTotals.carbs}g C</span>
                         <span className="text-slate-300">·</span>
                         <span className="text-purple-700 font-semibold">{mealTotals.fat}g G</span>
+                        {mealTotals.fiber > 0 && (
+                          <>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-teal-700 font-semibold">{Math.round(mealTotals.fiber * 10) / 10}g Fib</span>
+                          </>
+                        )}
+                        {mealTotals.sodium > 0 && (
+                          <>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-slate-600 font-semibold">{Math.round(mealTotals.sodium)}mg Na</span>
+                          </>
+                        )}
                       </div>
                     )}
 
@@ -1345,20 +1553,20 @@ export const DietSection: React.FC<DietSectionProps> = ({
                       <div
                         key={food.id}
                         id={`food-item-${food.id}`}
-                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${
+                        className={`p-3 rounded-xl border flex items-start justify-between gap-2.5 sm:gap-3 transition-colors ${
                           food.done
                             ? 'bg-emerald-50/40 border-emerald-200'
                             : 'bg-slate-50/60 border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         {/* Checkbox and Food Info */}
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                           <button
                             id={`toggle-food-${food.id}`}
                             type="button"
                             disabled={isPastDay && !isEditingPastDay}
                             onClick={() => handleToggleFoodDone(meal.id, food.id)}
-                            className={`flex-shrink-0 transition-colors ${
+                            className={`flex-shrink-0 pt-0.5 min-w-[36px] min-h-[36px] flex items-center justify-center transition-colors ${
                               isPastDay && !isEditingPastDay
                                 ? 'cursor-default opacity-85'
                                 : 'cursor-pointer'
@@ -1384,19 +1592,41 @@ export const DietSection: React.FC<DietSectionProps> = ({
                             )}
                           </button>
 
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span
-                                className={`text-sm font-semibold ${
+                                className={`text-sm font-semibold break-words ${
                                   food.done ? 'line-through text-slate-400' : 'text-slate-800'
                                 }`}
                               >
                                 {food.name}
                               </span>
-                              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md shrink-0">
                                 <Scale className="w-3 h-3 text-emerald-600" />
                                 {food.quantity}
                               </span>
+
+                              {/* Selo de Confiança */}
+                              {food.confianca === 'alta' && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800 shrink-0">
+                                  ✓ alta
+                                </span>
+                              )}
+                              {food.confianca === 'media' && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800 shrink-0">
+                                  média
+                                </span>
+                              )}
+                              {food.confianca === 'baixa' && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-800 shrink-0" title="Estimativa incerta: toque em editar para ajustar">
+                                  ⚠ baixa (revise)
+                                </span>
+                              )}
+                              {food.base === 'rotulo' && (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800 shrink-0">
+                                  rótulo
+                                </span>
+                              )}
                             </div>
 
                             {/* Visible Macros Breakdown */}
@@ -1404,7 +1634,7 @@ export const DietSection: React.FC<DietSectionProps> = ({
                               food.protein !== undefined ||
                               food.carbs !== undefined ||
                               food.fat !== undefined) && (
-                              <div className="flex items-center gap-1.5 text-xs mt-1 flex-wrap">
+                              <div className="flex items-center gap-1.5 text-xs flex-wrap">
                                 <span className="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/70">
                                   {food.calories ?? 0} kcal
                                 </span>
@@ -1420,40 +1650,58 @@ export const DietSection: React.FC<DietSectionProps> = ({
                                 <span className="text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200/70 font-medium">
                                   {food.fat ?? 0}g gordura
                                 </span>
+
+                                {/* Fibras e Sódio opcionais */}
+                                {food.fibra_g !== undefined && food.fibra_g > 0 && (
+                                  <>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200/70 font-medium text-[11px]">
+                                      {food.fibra_g}g fibra
+                                    </span>
+                                  </>
+                                )}
+                                {food.sodio_mg !== undefined && food.sodio_mg > 0 && (
+                                  <>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-medium text-[11px]">
+                                      {food.sodio_mg}mg Na
+                                    </span>
+                                  </>
+                                )}
                               </div>
                             )}
 
                             {food.notes && (
-                              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                                <FileText className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                                <span>{food.notes}</span>
+                              <p className="text-xs text-slate-500 flex items-start gap-1 break-words">
+                                <FileText className="w-3 h-3 text-slate-400 flex-shrink-0 mt-0.5" />
+                                <span className="break-words">{food.notes}</span>
                               </p>
                             )}
                           </div>
                         </div>
 
-                        {/* Visible Edit & Delete buttons */}
+                        {/* Visible Edit & Delete buttons (empilhados na lateral com min-h e min-w de 40px) */}
                         {(!isPastDay || isEditingPastDay) && (
-                          <div className="flex items-center gap-1 flex-shrink-0">
+                          <div className="flex flex-col items-center gap-1 flex-shrink-0">
                             <button
                               id={`edit-food-btn-${food.id}`}
                               type="button"
                               onClick={() => handleOpenEditFood(meal.id, food)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors cursor-pointer"
+                              className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer"
                               title="Editar alimento"
                               aria-label="Editar alimento"
                             >
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               id={`delete-food-btn-${food.id}`}
                               type="button"
                               onClick={() => handleDeleteFood(meal, food)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                              className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl text-slate-400 hover:text-red-600 bg-slate-100 hover:bg-red-50 dark:bg-slate-800 dark:hover:bg-red-950/40 border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer"
                               title="Excluir alimento"
                               aria-label="Excluir alimento"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         )}
@@ -1866,8 +2114,160 @@ export const DietSection: React.FC<DietSectionProps> = ({
           ) : (
             /* Manual Mode Form (or edit mode) */
             <form onSubmit={handleSaveFoodManual} className="space-y-4">
+              {/* Opção: Usar tabela do rótulo (precisão máxima) */}
+              {!editingFood && (
+                <div className="border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-2xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                        Usar tabela do rótulo (precisão máxima)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setUseLabelTable(!useLabelTable)}
+                      className="text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                    >
+                      {useLabelTable ? 'Ocultar' : 'Abrir calculadora'}
+                    </button>
+                  </div>
+
+                  {useLabelTable && (
+                    <div className="space-y-3 pt-2 border-t border-emerald-200/80 dark:border-emerald-800 text-xs">
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
+                        Informe os dados nutricionais informados na embalagem e quanto você consumiu. O app calculará os valores exatos e marcará com alta confiança.
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            A tabela do rótulo é por:
+                          </label>
+                          <select
+                            value={labelPortionBasis}
+                            onChange={(e) => setLabelPortionBasis(e.target.value as '100g' | 'custom')}
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          >
+                            <option value="100g">Por 100 gramas ou 100 ml</option>
+                            <option value="custom">Por porção específica da embalagem</option>
+                          </select>
+                        </div>
+
+                        {labelPortionBasis === 'custom' && (
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                              Tamanho da porção do rótulo (g ou ml):
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="Ex: 30"
+                              value={labelPortionSizeG}
+                              onChange={(e) => setLabelPortionSizeG(e.target.value)}
+                              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        <div>
+                          <span className="block text-[10px] uppercase font-bold text-amber-700 mb-1">Kcal</span>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={labelKcal}
+                            onChange={(e) => setLabelKcal(e.target.value)}
+                            className="w-full px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] uppercase font-bold text-blue-700 mb-1">Prot (g)</span>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="0"
+                            value={labelProtein}
+                            onChange={(e) => setLabelProtein(e.target.value)}
+                            className="w-full px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] uppercase font-bold text-emerald-700 mb-1">Carb (g)</span>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="0"
+                            value={labelCarbs}
+                            onChange={(e) => setLabelCarbs(e.target.value)}
+                            className="w-full px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] uppercase font-bold text-purple-700 mb-1">Gord (g)</span>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="0"
+                            value={labelFat}
+                            onChange={(e) => setLabelFat(e.target.value)}
+                            className="w-full px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] uppercase font-bold text-teal-700 mb-1">Fib (g)</span>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="0"
+                            value={labelFiber}
+                            onChange={(e) => setLabelFiber(e.target.value)}
+                            className="w-full px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] uppercase font-bold text-slate-600 mb-1">Sódio (mg)</span>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={labelSodium}
+                            onChange={(e) => setLabelSodium(e.target.value)}
+                            className="w-full px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                            Quantidade consumida (g ou ml):
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            placeholder="Ex: 120"
+                            value={labelConsumedG}
+                            onChange={(e) => setLabelConsumedG(e.target.value)}
+                            className="w-24 px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCalculateFromLabel}
+                          disabled={!labelConsumedG.trim() || Number(labelConsumedG) <= 0}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          Calcular valores do item
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Nome do Alimento ou Preparação *
                 </label>
                 <input
@@ -1877,28 +2277,62 @@ export const DietSection: React.FC<DietSectionProps> = ({
                   placeholder="Ex: Frango grelhado, Arroz integral, Whey..."
                   value={foodName}
                   onChange={(e) => setFoodName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   autoFocus
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Quantidade / Porção *
-                </label>
-                <input
-                  id="food-quantity-input"
-                  type="text"
-                  required
-                  placeholder="Ex: 150g, 2 colheres de sopa, 1 unidade, 1 scoop..."
-                  value={foodQuantity}
-                  onChange={(e) => setFoodQuantity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Descrição da Porção *
+                  </label>
+                  <input
+                    id="food-quantity-input"
+                    type="text"
+                    required
+                    placeholder="Ex: 150g, 2 colheres de sopa, 1 unidade, 1 scoop..."
+                    value={foodQuantity}
+                    onChange={(e) => setFoodQuantity(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Peso em Gramas/ml <span className="font-normal text-slate-400">(escala automática)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="food-quantity-g-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Ex: 150"
+                      value={foodQuantityG}
+                      onChange={(e) => handleQuantityGChange(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-8"
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400">g</span>
+                  </div>
+                </div>
               </div>
 
+              {foodRecalcHint && (
+                <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-[11px] text-blue-800 dark:text-blue-200 flex items-center justify-between">
+                  <span>Valores recalculados pela quantidade; você pode ajustá-los à mão livremente.</span>
+                  <button
+                    type="button"
+                    onClick={() => setFoodRecalcHint(false)}
+                    className="text-blue-500 hover:text-blue-800 dark:hover:text-blue-100 text-xs font-bold px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Macronutrientes <span className="font-normal text-slate-400">(opcional)</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1911,7 +2345,7 @@ export const DietSection: React.FC<DietSectionProps> = ({
                       placeholder="0"
                       value={foodCalories}
                       onChange={(e) => setFoodCalories(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -1920,10 +2354,11 @@ export const DietSection: React.FC<DietSectionProps> = ({
                       id="food-protein-input"
                       type="number"
                       min="0"
+                      step="0.1"
                       placeholder="0"
                       value={foodProtein}
                       onChange={(e) => setFoodProtein(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -1932,10 +2367,11 @@ export const DietSection: React.FC<DietSectionProps> = ({
                       id="food-carbs-input"
                       type="number"
                       min="0"
+                      step="0.1"
                       placeholder="0"
                       value={foodCarbs}
                       onChange={(e) => setFoodCarbs(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -1944,17 +2380,47 @@ export const DietSection: React.FC<DietSectionProps> = ({
                       id="food-fat-input"
                       type="number"
                       min="0"
+                      step="0.1"
                       placeholder="0"
                       value={foodFat}
                       onChange={(e) => setFoodFat(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Fibras e Sódio opcionais */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <span className="block text-[10px] uppercase font-bold text-teal-700 mb-1">Fibras (g) - opcional</span>
+                  <input
+                    id="food-fiber-input"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="0"
+                    value={foodFiber}
+                    onChange={(e) => setFoodFiber(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <span className="block text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400 mb-1">Sódio (mg) - opcional</span>
+                  <input
+                    id="food-sodium-input"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={foodSodium}
+                    onChange={(e) => setFoodSodium(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Observação <span className="font-normal text-slate-400">(opcional)</span>
                 </label>
                 <textarea
@@ -1963,16 +2429,16 @@ export const DietSection: React.FC<DietSectionProps> = ({
                   placeholder="Ex: Sem sal, cozinhar no vapor, beber com água gelada..."
                   value={foodNotes}
                   onChange={(e) => setFoodNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   id="cancel-food-modal-btn"
                   type="button"
                   onClick={() => setIsFoodModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>

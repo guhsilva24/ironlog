@@ -260,6 +260,8 @@ export const MonthlyCalendarModal: React.FC<MonthlyCalendarModalProps> = ({
       protein: number;
       carbs: number;
       fat: number;
+      fiber?: number;
+      sodium?: number;
       itemsCount: number;
     } | null = null;
 
@@ -271,6 +273,8 @@ export const MonthlyCalendarModal: React.FC<MonthlyCalendarModalProps> = ({
           protein: t.protein,
           carbs: t.carbs,
           fat: t.fat,
+          fiber: t.fiber,
+          sodium: t.sodium,
           itemsCount: t.itemsCount,
         };
       }
@@ -282,6 +286,8 @@ export const MonthlyCalendarModal: React.FC<MonthlyCalendarModalProps> = ({
           protein: entry.totals.protein,
           carbs: entry.totals.carbs,
           fat: entry.totals.fat,
+          fiber: entry.totals.fiber,
+          sodium: entry.totals.sodium,
           itemsCount: entry.totals.itemsCount,
         };
       } else {
@@ -697,26 +703,39 @@ Dê um feedback objetivo sobre a minha consistência e disciplina neste dia, des
                 </div>
 
                 {selectedDetails.nutritionTotals ? (
-                  <div className="grid grid-cols-3 gap-1 text-[11px] text-center pt-1">
-                    <div className="p-1 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-400 block text-[9px] uppercase font-bold">Prot</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">
-                        {selectedDetails.nutritionTotals.protein}g
-                      </span>
+                  <>
+                    <div className="grid grid-cols-3 gap-1 text-[11px] text-center pt-1">
+                      <div className="p-1 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">Prot</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                          {selectedDetails.nutritionTotals.protein}g
+                        </span>
+                      </div>
+                      <div className="p-1 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">Carb</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                          {selectedDetails.nutritionTotals.carbs}g
+                        </span>
+                      </div>
+                      <div className="p-1 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-400 block text-[9px] uppercase font-bold">Gord</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                          {selectedDetails.nutritionTotals.fat}g
+                        </span>
+                      </div>
                     </div>
-                    <div className="p-1 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-400 block text-[9px] uppercase font-bold">Carb</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">
-                        {selectedDetails.nutritionTotals.carbs}g
-                      </span>
-                    </div>
-                    <div className="p-1 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-400 block text-[9px] uppercase font-bold">Gord</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">
-                        {selectedDetails.nutritionTotals.fat}g
-                      </span>
-                    </div>
-                  </div>
+                    {((selectedDetails.nutritionTotals.fiber !== undefined && selectedDetails.nutritionTotals.fiber > 0) ||
+                      (selectedDetails.nutritionTotals.sodium !== undefined && selectedDetails.nutritionTotals.sodium > 0)) && (
+                      <div className="flex items-center justify-center gap-3 pt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                        {selectedDetails.nutritionTotals.fiber !== undefined && selectedDetails.nutritionTotals.fiber > 0 && (
+                          <span>Fibra: <strong className="text-teal-700 dark:text-teal-300">{Math.round(selectedDetails.nutritionTotals.fiber * 10) / 10}g</strong></span>
+                        )}
+                        {selectedDetails.nutritionTotals.sodium !== undefined && selectedDetails.nutritionTotals.sodium > 0 && (
+                          <span>Sódio: <strong className="text-slate-700 dark:text-slate-300">{Math.round(selectedDetails.nutritionTotals.sodium)}mg</strong></span>
+                        )}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <p className="text-slate-400 dark:text-slate-500 italic text-[11px]">
                     Sem refeições registradas neste dia.

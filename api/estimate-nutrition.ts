@@ -24,7 +24,10 @@ Você tem conhecimento amplo sobre culinária regional brasileira (Norte/Manaus,
 Ao receber o nome de um prato ou alimento regional (ex: caboquinho, tacacá, tambaqui assado, x-caboquinho, baião de dois, açaí com farinha, pamonha, vatapá, etc.), use seu conhecimento sobre os ingredientes típicos dessa preparação na região de origem para estimar os macronutrientes com a maior precisão possível, considerando o modo de preparo tradicional. Se o nome do prato for ambíguo, variar muito de preparo entre regiões, ou você não tiver certeza suficiente para estimar com confiança, retorne uma pergunta rápida de esclarecimento ao usuário (type: "clarification") antes de gerar os valores. Sempre priorize precisão regional sobre suposições genéricas.
 
 2. Marcas e Produtos Industrializados:
-Quando o usuário mencionar uma marca específica de produto industrializado (ex: manteiga Deline, leite Itálac, iogurte Nestlé, pão Pullman, entre outras marcas comuns no Brasil), utilize seu conhecimento sobre a tabela nutricional real e a porção padrão informada na embalagem desse produto específico para estimar os macronutrientes, em vez de usar um valor genérico da categoria do alimento. Considere o tamanho de porção típico informado na embalagem (ex: 1 colher de sopa = 10g de manteiga, 1 copo = 200ml de leite) ao calcular, a menos que o usuário informe uma quantidade diferente. Se você não tiver certeza sobre os valores exatos de uma marca específica, informe isso claramente no campo "observacao" (ex: 'estimativa aproximada, marca não confirmada com certeza'). Se a quantidade consumida não foi informada, faça uma pergunta de esclarecimento (type: "clarification").`;
+Quando o usuário mencionar uma marca específica de produto industrializado (ex: manteiga Deline, leite Itálac, iogurte Nestlé, pão Pullman, entre outras marcas comuns no Brasil), utilize seu conhecimento sobre a tabela nutricional real e a porção padrão informada na embalagem desse produto específico para estimar os macronutrientes, em vez de usar um valor genérico da categoria do alimento. Considere o tamanho de porção típico informado na embalagem (ex: 1 colher de sopa = 10g de manteiga, 1 copo = 200ml de leite) ao calcular, a menos que o usuário informe uma quantidade diferente. Se você não tiver certeza sobre os valores exatos de uma marca específica, informe isso claramente no campo "observacao" (ex: 'estimativa aproximada, marca não confirmada com certeza'). Se a quantidade consumida não foi informada, faça uma pergunta de esclarecimento (type: "clarification").
+
+3. Precisão, TACO, Medidas Caseiras e Preparo:
+Use como referência principal a Tabela Brasileira de Composição de Alimentos (TACO) e, para produtos de marca, a tabela nutricional da embalagem. Antes de calcular, converta toda medida caseira em gramas (ex.: 1 ovo médio ≈ 50 g, 1 pão francês ≈ 50 g, 1 fatia de pão de forma ≈ 25 g, 1 copo = 200 ml) e informe o resultado em quantidade_g. Considere o ESTADO e o PREPARO do alimento (cru, cozido, grelhado, frito, com óleo ou manteiga) porque mudam muito as calorias; arroz, feijão, macarrão e carnes devem ser calculados pelo valor COZIDO quando o usuário disser cozido ou não especificar. Pratos compostos (ex.: x-caboquinho, tacacá, baião de dois) devem ser decompostos em ingredientes, somando cada parte. Nunca invente: se a confiança for baixa, marque confianca "baixa" e explique em observacao o que foi assumido. Os valores devem refletir a quantidade EXATA consumida, não a porção de 100 g.`;
 
 const NUTRITION_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -45,12 +48,17 @@ const NUTRITION_RESPONSE_SCHEMA = {
         type: 'OBJECT',
         properties: {
           nome: { type: 'STRING', description: 'Nome do alimento ou prato' },
-          quantidade: { type: 'STRING', description: 'Porção consumida ou quantidade estimada' },
+          quantidade: { type: 'STRING', description: 'Porção consumida ou quantidade estimada descritiva (ex: 150g, 2 colheres de sopa)' },
           calorias: { type: 'NUMBER', description: 'Calorias totais em kcal (número inteiro)' },
           proteina_g: { type: 'NUMBER', description: 'Proteína em gramas' },
           carboidrato_g: { type: 'NUMBER', description: 'Carboidratos em gramas' },
           gordura_g: { type: 'NUMBER', description: 'Gordura total em gramas' },
-          observacao: { type: 'STRING', description: 'Observação opcional da tabela ou marca' },
+          quantidade_g: { type: 'NUMBER', description: 'Peso total estimado em gramas ou ml consumido' },
+          fibra_g: { type: 'NUMBER', description: 'Fibras em gramas' },
+          sodio_mg: { type: 'NUMBER', description: 'Sódio em miligramas' },
+          confianca: { type: 'STRING', enum: ['alta', 'media', 'baixa'], description: 'Nível de certeza sobre os macronutrientes da porção' },
+          base: { type: 'STRING', enum: ['taco', 'rotulo', 'estimativa'], description: 'Fonte de referência utilizada' },
+          observacao: { type: 'STRING', description: 'Observação opcional da tabela, modo de preparo ou marca' },
         },
         required: ['nome', 'quantidade', 'calorias', 'proteina_g', 'carboidrato_g', 'gordura_g'],
       },
@@ -206,8 +214,9 @@ async function generateContentWithRetry(params: {
   systemInstruction?: string;
   responseMimeType?: string;
   responseSchema?: any;
+  temperature?: number;
 }): Promise<{ text: string; modelUsed: string; attempts: string[] }> {
-  const { apiKey, contents, systemInstruction, responseMimeType, responseSchema } = params;
+  const { apiKey, contents, systemInstruction, responseMimeType, responseSchema, temperature } = params;
 
   const { candidateList } = await getOrDiscoverModels(apiKey);
 
@@ -219,6 +228,9 @@ async function generateContentWithRetry(params: {
   }
 
   const generationConfig: any = {};
+  if (typeof temperature === 'number') {
+    generationConfig.temperature = temperature;
+  }
   if (responseMimeType) {
     generationConfig.responseMimeType = responseMimeType;
   }
@@ -390,6 +402,7 @@ export default async function handler(req: any, res: any) {
       systemInstruction: NUTRITION_SYSTEM_INSTRUCTION,
       responseMimeType: 'application/json',
       responseSchema: NUTRITION_RESPONSE_SCHEMA,
+      temperature: 0.1,
     });
 
     let cleanJson = result.text.trim();
@@ -397,23 +410,60 @@ export default async function handler(req: any, res: any) {
       cleanJson = cleanJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
     }
 
-    let parsed: any;
+    let parsed: any = null;
     try {
       parsed = JSON.parse(cleanJson);
     } catch {
       // Se não for JSON direto mas for uma pergunta curta de esclarecimento
-      if (cleanJson.includes('?') || cleanJson.length < 350) {
+      if (cleanJson.includes('?') && cleanJson.length < 350) {
         return res.json({
           type: 'clarification',
           question: cleanJson.replace(/^["']|["']$/g, '').trim(),
           modelUsed: result.modelUsed,
         });
       }
-      return res.status(500).json({
-        error: 'Formato de resposta inválido retornado pela IA.',
-        statusCode: 500,
-        message: `A IA retornou um formato inesperado:\n${cleanJson}`,
-      });
+
+      // Tentativa de 1 nova chamada com instrução explícita de corrigir o JSON
+      try {
+        console.warn('[Nutrition API] Resposta em formato inválido. Tentando 1 nova chamada para corrigir o JSON...');
+        const retryContents = [
+          ...contents,
+          {
+            role: 'model',
+            parts: [{ text: cleanJson }],
+          },
+          {
+            role: 'user',
+            parts: [
+              {
+                text: 'A resposta anterior não é um JSON válido. Retorne EXCLUSIVAMENTE o objeto JSON válido correspondente ao schema especificado, sem formatação markdown ou texto adicional.',
+              },
+            ],
+          },
+        ];
+
+        const retryResult = await generateContentWithRetry({
+          apiKey,
+          contents: retryContents,
+          systemInstruction: NUTRITION_SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+          responseSchema: NUTRITION_RESPONSE_SCHEMA,
+          temperature: 0.1,
+        });
+
+        let retryClean = retryResult.text.trim();
+        if (retryClean.startsWith('```')) {
+          retryClean = retryClean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+        }
+        parsed = JSON.parse(retryClean);
+      } catch {
+        // Se ainda falhar, devolve a mensagem amigável pedindo para descrever de outra forma
+        return res.status(400).json({
+          error: 'Não foi possível interpretar a resposta nutricional.',
+          statusCode: 400,
+          message: 'Tente descrever o alimento de outra forma com mais detalhes (ex: "150g de frango grelhado e 1 concha de arroz").',
+        });
+      }
     }
 
     // Fluxo de esclarecimento (pratos regionais, marcas, quantidade)
@@ -453,19 +503,123 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({
         error: 'Nenhum alimento identificado.',
         statusCode: 400,
-        message: 'Tente descrever o alimento com mais detalhes (ex: "2 fatias de pão com 1 colher de manteiga").',
+        message: 'Tente descrever o alimento de outra forma com mais detalhes (ex: "2 fatias de pão com 1 colher de manteiga").',
       });
     }
 
-    const items = rawItems.map((item: any) => ({
-      nome: String(item.nome || item.name || 'Alimento').trim(),
-      quantidade: String(item.quantidade || item.quantity || '1 porção').trim(),
-      calorias: Math.max(0, Math.round(Number(item.calorias ?? item.calories) || 0)),
-      proteina_g: Math.max(0, Math.round(Number(item.proteina_g ?? item.protein) || 0)),
-      carboidrato_g: Math.max(0, Math.round(Number(item.carboidrato_g ?? item.carbs) || 0)),
-      gordura_g: Math.max(0, Math.round(Number(item.gordura_g ?? item.fat) || 0)),
-      observacao: item.observacao ? String(item.observacao).trim() : (item.notes ? String(item.notes).trim() : undefined),
-    }));
+    // Helper: sanitização numérica
+    const sanitizeNonNegative = (val: any): number | undefined => {
+      if (val === null || val === undefined || val === '') return undefined;
+      const num = Number(val);
+      if (isNaN(num) || num < 0) return undefined;
+      return num;
+    };
+
+    const isZeroCalorieBeverage = (name: string): boolean => {
+      const lower = name.toLowerCase();
+      return (
+        lower.includes('água') ||
+        lower.includes('agua') ||
+        lower.includes('café sem açúcar') ||
+        lower.includes('cafe sem acucar') ||
+        lower.includes('chá sem açúcar') ||
+        lower.includes('cha sem acucar') ||
+        lower.includes('chá verde') ||
+        lower.includes('cha verde')
+      );
+    };
+
+    const items = rawItems.map((item: any) => {
+      const nome = String(item.nome || item.name || 'Alimento').trim();
+      const quantidade = String(item.quantidade || item.quantity || '1 porção').trim();
+
+      // Macros arredondados para 1 casa decimal; descarta negativos e NaN
+      const rawProt = sanitizeNonNegative(item.proteina_g ?? item.protein);
+      const rawCarb = sanitizeNonNegative(item.carboidrato_g ?? item.carbs);
+      const rawFat = sanitizeNonNegative(item.gordura_g ?? item.fat);
+
+      const proteina_g = rawProt !== undefined ? Math.round(rawProt * 10) / 10 : 0;
+      const carboidrato_g = rawCarb !== undefined ? Math.round(rawCarb * 10) / 10 : 0;
+      const gordura_g = rawFat !== undefined ? Math.round(rawFat * 10) / 10 : 0;
+
+      // Conferência de calorias: kcal_macros = 4*prot + 4*carb + 9*fat
+      const kcal_macros = Math.round(4 * proteina_g + 4 * carboidrato_g + 9 * gordura_g);
+      const rawCals = sanitizeNonNegative(item.calorias ?? item.calories);
+
+      let calorias = rawCals !== undefined ? Math.round(rawCals) : kcal_macros;
+      let observacao = item.observacao ? String(item.observacao).trim() : (item.notes ? String(item.notes).trim() : '');
+
+      if (rawCals === undefined || Math.abs(calorias - kcal_macros) > kcal_macros * 0.12) {
+        calorias = kcal_macros;
+        const recalcNote = 'calorias recalculadas a partir dos macros';
+        if (!observacao.toLowerCase().includes('calorias recalculadas')) {
+          observacao = observacao ? `${observacao} (${recalcNote})` : recalcNote;
+        }
+      }
+
+      // Novos campos opcionais
+      const rawQtdG = sanitizeNonNegative(item.quantidade_g ?? item.weight_g ?? item.gramas);
+      const quantidade_g = rawQtdG !== undefined ? Math.round(rawQtdG * 10) / 10 : undefined;
+
+      const rawFibra = sanitizeNonNegative(item.fibra_g ?? item.fiber);
+      const fibra_g = rawFibra !== undefined ? Math.round(rawFibra * 10) / 10 : undefined;
+
+      const rawSodio = sanitizeNonNegative(item.sodio_mg ?? item.sodium);
+      const sodio_mg = rawSodio !== undefined ? Math.round(rawSodio) : undefined;
+
+      let confianca: 'alta' | 'media' | 'baixa' =
+        item.confianca === 'alta' || item.confianca === 'media' || item.confianca === 'baixa'
+          ? item.confianca
+          : 'media';
+
+      const base: 'taco' | 'rotulo' | 'estimativa' =
+        item.base === 'taco' || item.base === 'rotulo' || item.base === 'estimativa'
+          ? item.base
+          : 'taco';
+
+      // Regra de verificação: se calorias > 2500 ou todos macros forem zero (exceto água/café/chá)
+      const allZeros = proteina_g === 0 && carboidrato_g === 0 && gordura_g === 0 && calorias === 0;
+      if (calorias > 2500 || (allZeros && !isZeroCalorieBeverage(nome))) {
+        confianca = 'baixa';
+        const reviewNote = 'valores atípicos, por favor revise';
+        if (!observacao.toLowerCase().includes('revise')) {
+          observacao = observacao ? `${observacao} (${reviewNote})` : reviewNote;
+        }
+      }
+
+      // Escala por 100g para recálculo proporcional no app
+      let kcal100: number | undefined;
+      let p100: number | undefined;
+      let c100: number | undefined;
+      let g100: number | undefined;
+
+      if (quantidade_g && quantidade_g > 0) {
+        const factor = 100 / quantidade_g;
+        kcal100 = Math.round(calorias * factor);
+        p100 = Math.round(proteina_g * factor * 10) / 10;
+        c100 = Math.round(carboidrato_g * factor * 10) / 10;
+        g100 = Math.round(gordura_g * factor * 10) / 10;
+      }
+
+      return {
+        nome,
+        quantidade,
+        calorias,
+        proteina_g,
+        carboidrato_g,
+        gordura_g,
+        quantidade_g,
+        fibra_g,
+        sodio_mg,
+        confianca,
+        base,
+        kcal100,
+        p100,
+        c100,
+        g100,
+        observacao: observacao || undefined,
+      };
+    });
 
     return res.json({
       type: 'estimate',

@@ -159,6 +159,7 @@ async function startServer() {
         systemInstruction: NUTRITION_SYSTEM_INSTRUCTION,
         responseMimeType: 'application/json',
         responseSchema: NUTRITION_RESPONSE_SCHEMA,
+        temperature: 0.1,
       });
 
       let cleanJson = result.text.trim();
@@ -166,22 +167,53 @@ async function startServer() {
         cleanJson = cleanJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
       }
 
-      let parsed: any;
+      let parsed: any = null;
       try {
         parsed = JSON.parse(cleanJson);
       } catch {
-        if (cleanJson.includes('?') || cleanJson.length < 350) {
+        if (cleanJson.includes('?') && cleanJson.length < 350) {
           return res.json({
             type: 'clarification',
             question: cleanJson.replace(/^["']|["']$/g, '').trim(),
             modelUsed: result.modelUsed,
           });
         }
-        return res.status(500).json({
-          error: 'Formato de resposta inválido retornado pela IA.',
-          statusCode: 500,
-          message: `A IA retornou um formato inesperado:\n${cleanJson}`,
-        });
+
+        try {
+          const retryContents = [
+            ...contents,
+            { role: 'model', parts: [{ text: cleanJson }] },
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: 'A resposta anterior não é um JSON válido. Retorne EXCLUSIVAMENTE o objeto JSON válido correspondente ao schema especificado, sem formatação markdown ou texto adicional.',
+                },
+              ],
+            },
+          ];
+
+          const retryResult = await generateContentWithRetry({
+            apiKey,
+            contents: retryContents,
+            systemInstruction: NUTRITION_SYSTEM_INSTRUCTION,
+            responseMimeType: 'application/json',
+            responseSchema: NUTRITION_RESPONSE_SCHEMA,
+            temperature: 0.1,
+          });
+
+          let retryClean = retryResult.text.trim();
+          if (retryClean.startsWith('```')) {
+            retryClean = retryClean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+          }
+          parsed = JSON.parse(retryClean);
+        } catch {
+          return res.status(400).json({
+            error: 'Não foi possível interpretar a resposta nutricional.',
+            statusCode: 400,
+            message: 'Tente descrever o alimento de outra forma com mais detalhes (ex: "150g de frango grelhado e 1 concha de arroz").',
+          });
+        }
       }
 
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
@@ -219,19 +251,115 @@ async function startServer() {
         return res.status(400).json({
           error: 'Nenhum alimento identificado.',
           statusCode: 400,
-          message: 'Tente descrever o alimento com mais detalhes.',
+          message: 'Tente descrever o alimento de outra forma com mais detalhes.',
         });
       }
 
-      const items = rawItems.map((item: any) => ({
-        nome: String(item.nome || item.name || 'Alimento').trim(),
-        quantidade: String(item.quantidade || item.quantity || '1 porção').trim(),
-        calorias: Math.max(0, Math.round(Number(item.calorias ?? item.calories) || 0)),
-        proteina_g: Math.max(0, Math.round(Number(item.proteina_g ?? item.protein) || 0)),
-        carboidrato_g: Math.max(0, Math.round(Number(item.carboidrato_g ?? item.carbs) || 0)),
-        gordura_g: Math.max(0, Math.round(Number(item.gordura_g ?? item.fat) || 0)),
-        observacao: item.observacao ? String(item.observacao).trim() : (item.notes ? String(item.notes).trim() : undefined),
-      }));
+      const sanitizeNonNegative = (val: any): number | undefined => {
+        if (val === null || val === undefined || val === '') return undefined;
+        const num = Number(val);
+        if (isNaN(num) || num < 0) return undefined;
+        return num;
+      };
+
+      const isZeroCalorieBeverage = (name: string): boolean => {
+        const lower = name.toLowerCase();
+        return (
+          lower.includes('água') ||
+          lower.includes('agua') ||
+          lower.includes('café sem açúcar') ||
+          lower.includes('cafe sem acucar') ||
+          lower.includes('chá sem açúcar') ||
+          lower.includes('cha sem acucar')
+        );
+      };
+
+      const items = rawItems.map((item: any) => {
+        const nome = String(item.nome || item.name || 'Alimento').trim();
+        const quantidade = String(item.quantidade || item.quantity || '1 porção').trim();
+
+        const rawProt = sanitizeNonNegative(item.proteina_g ?? item.protein);
+        const rawCarb = sanitizeNonNegative(item.carboidrato_g ?? item.carbs);
+        const rawFat = sanitizeNonNegative(item.gordura_g ?? item.fat);
+
+        const proteina_g = rawProt !== undefined ? Math.round(rawProt * 10) / 10 : 0;
+        const carboidrato_g = rawCarb !== undefined ? Math.round(rawCarb * 10) / 10 : 0;
+        const gordura_g = rawFat !== undefined ? Math.round(rawFat * 10) / 10 : 0;
+
+        const kcal_macros = Math.round(4 * proteina_g + 4 * carboidrato_g + 9 * gordura_g);
+        const rawCals = sanitizeNonNegative(item.calorias ?? item.calories);
+
+        let calorias = rawCals !== undefined ? Math.round(rawCals) : kcal_macros;
+        let observacao = item.observacao ? String(item.observacao).trim() : (item.notes ? String(item.notes).trim() : '');
+
+        if (rawCals === undefined || Math.abs(calorias - kcal_macros) > kcal_macros * 0.12) {
+          calorias = kcal_macros;
+          const recalcNote = 'calorias recalculadas a partir dos macros';
+          if (!observacao.toLowerCase().includes('calorias recalculadas')) {
+            observacao = observacao ? `${observacao} (${recalcNote})` : recalcNote;
+          }
+        }
+
+        const rawQtdG = sanitizeNonNegative(item.quantidade_g ?? item.weight_g ?? item.gramas);
+        const quantidade_g = rawQtdG !== undefined ? Math.round(rawQtdG * 10) / 10 : undefined;
+
+        const rawFibra = sanitizeNonNegative(item.fibra_g ?? item.fiber);
+        const fibra_g = rawFibra !== undefined ? Math.round(rawFibra * 10) / 10 : undefined;
+
+        const rawSodio = sanitizeNonNegative(item.sodio_mg ?? item.sodium);
+        const sodio_mg = rawSodio !== undefined ? Math.round(rawSodio) : undefined;
+
+        let confianca: 'alta' | 'media' | 'baixa' =
+          item.confianca === 'alta' || item.confianca === 'media' || item.confianca === 'baixa'
+            ? item.confianca
+            : 'media';
+
+        const base: 'taco' | 'rotulo' | 'estimativa' =
+          item.base === 'taco' || item.base === 'rotulo' || item.base === 'estimativa'
+            ? item.base
+            : 'taco';
+
+        const allZeros = proteina_g === 0 && carboidrato_g === 0 && gordura_g === 0 && calorias === 0;
+        if (calorias > 2500 || (allZeros && !isZeroCalorieBeverage(nome))) {
+          confianca = 'baixa';
+          const reviewNote = 'valores atípicos, por favor revise';
+          if (!observacao.toLowerCase().includes('revise')) {
+            observacao = observacao ? `${observacao} (${reviewNote})` : reviewNote;
+          }
+        }
+
+        let kcal100: number | undefined;
+        let p100: number | undefined;
+        let c100: number | undefined;
+        let g100: number | undefined;
+
+        if (quantidade_g && quantidade_g > 0) {
+          const factor = 100 / quantidade_g;
+          kcal100 = Math.round(calorias * factor);
+          p100 = Math.round(proteina_g * factor * 10) / 10;
+          c100 = Math.round(carboidrato_g * factor * 10) / 10;
+          g100 = Math.round(gordura_g * factor * 10) / 10;
+        }
+
+        return {
+          nome,
+          quantidade,
+          calorias,
+          proteina_g,
+          carboidrato_g,
+          gordura_g,
+          quantidade_g,
+          fibra_g,
+          sodio_mg,
+          confianca,
+          base,
+          kcal100,
+          p100,
+          c100,
+          g100,
+          observacao: observacao || undefined,
+        };
+      });
 
       return res.json({
         type: 'estimate',

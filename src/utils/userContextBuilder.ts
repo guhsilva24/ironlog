@@ -147,8 +147,18 @@ export function buildUserContextSummary(appData: AppData): string {
     const cardioType = isToday ? todayStatus?.cardio?.type : daySessions?.cardioType;
     const cardioMin = isToday ? todayStatus?.cardio?.durationMinutes : daySessions?.cardioMinutes;
 
+    const todayTotals = isToday ? calculateNutritionTotals(appData.meals) : null;
+    const fiber = isToday ? todayTotals?.fiber : (nutri?.totals as any)?.fiber;
+    const sodium = isToday ? todayTotals?.sodium : (nutri?.totals as any)?.sodium;
+
     const parts: string[] = [];
-    if (cals > 0 || prot > 0) parts.push(`${cals}kcal (${prot}g prot)`);
+    if (cals > 0 || prot > 0) {
+      let macroStr = `${cals}kcal (${prot}g prot`;
+      if (fiber && fiber > 0) macroStr += `, ${Math.round(fiber * 10) / 10}g fib`;
+      if (sodium && sodium > 0) macroStr += `, ${Math.round(sodium)}mg Na`;
+      macroStr += ')';
+      parts.push(macroStr);
+    }
     if (waterMl > 0) parts.push(`água: ${waterMl}ml`);
     if (workoutNames.length > 0) {
       parts.push(`treino: ${workoutNames.join(', ')}${isWorkoutCompleted ? ' (concluído)' : ''}`);

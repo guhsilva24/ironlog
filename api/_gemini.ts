@@ -24,7 +24,10 @@ Você tem conhecimento amplo sobre culinária regional brasileira (Norte/Manaus,
 Ao receber o nome de um prato ou alimento regional (ex: caboquinho, tacacá, tambaqui assado, x-caboquinho, baião de dois, açaí com farinha, pamonha, vatapá, etc.), use seu conhecimento sobre os ingredientes típicos dessa preparação na região de origem para estimar os macronutrientes com a maior precisão possível, considerando o modo de preparo tradicional. Se o nome do prato for ambíguo, variar muito de preparo entre regiões, ou você não tiver certeza suficiente para estimar com confiança, retorne uma pergunta rápida de esclarecimento ao usuário (type: "clarification") antes de gerar os valores. Sempre priorize precisão regional sobre suposições genéricas.
 
 2. Marcas e Produtos Industrializados:
-Quando o usuário mencionar uma marca específica de produto industrializado (ex: manteiga Deline, leite Itálac, iogurte Nestlé, pão Pullman, entre outras marcas comuns no Brasil), utilize seu conhecimento sobre a tabela nutricional real e a porção padrão informada na embalagem desse produto específico para estimar os macronutrientes, em vez de usar um valor genérico da categoria do alimento. Considere o tamanho de porção típico informado na embalagem (ex: 1 colher de sopa = 10g de manteiga, 1 copo = 200ml de leite) ao calcular, a menos que o usuário informe uma quantidade diferente. Se você não tiver certeza sobre os valores exatos de uma marca específica, informe isso claramente no campo "observacao" (ex: 'estimativa aproximada, marca não confirmada com certeza'). Se a quantidade consumida não foi informada, faça uma pergunta de esclarecimento (type: "clarification").`;
+Quando o usuário mencionar uma marca específica de produto industrializado (ex: manteiga Deline, leite Itálac, iogurte Nestlé, pão Pullman, entre outras marcas comuns no Brasil), utilize seu conhecimento sobre a tabela nutricional real e a porção padrão informada na embalagem desse produto específico para estimar os macronutrientes, em vez de usar um valor genérico da categoria do alimento. Considere o tamanho de porção típico informado na embalagem (ex: 1 colher de sopa = 10g de manteiga, 1 copo = 200ml de leite) ao calcular, a menos que o usuário informe uma quantidade diferente. Se você não tiver certeza sobre os valores exatos de uma marca específica, informe isso claramente no campo "observacao" (ex: 'estimativa aproximada, marca não confirmada com certeza'). Se a quantidade consumida não foi informada, faça uma pergunta de esclarecimento (type: "clarification").
+
+3. Precisão, TACO, Medidas Caseiras e Preparo:
+Use como referência principal a Tabela Brasileira de Composição de Alimentos (TACO) e, para produtos de marca, a tabela nutricional da embalagem. Antes de calcular, converta toda medida caseira em gramas (ex.: 1 ovo médio ≈ 50 g, 1 pão francês ≈ 50 g, 1 fatia de pão de forma ≈ 25 g, 1 copo = 200 ml) e informe o resultado em quantidade_g. Considere o ESTADO e o PREPARO do alimento (cru, cozido, grelhado, frito, com óleo ou manteiga) porque mudam muito as calorias; arroz, feijão, macarrão e carnes devem ser calculados pelo valor COZIDO quando o usuário disser cozido ou não especificar. Pratos compostos (ex.: x-caboquinho, tacacá, baião de dois) devem ser decompostos em ingredientes, somando cada parte. Nunca invente: se a confiança for baixa, marque confianca "baixa" e explique em observacao o que foi assumido. Os valores devem refletir a quantidade EXATA consumida, não a porção de 100 g.`;
 
 export const NUTRITION_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -45,12 +48,17 @@ export const NUTRITION_RESPONSE_SCHEMA = {
         type: 'OBJECT',
         properties: {
           nome: { type: 'STRING', description: 'Nome do alimento ou prato' },
-          quantidade: { type: 'STRING', description: 'Porção consumida ou quantidade estimada' },
+          quantidade: { type: 'STRING', description: 'Porção consumida ou quantidade estimada descritiva (ex: 150g, 2 colheres de sopa)' },
           calorias: { type: 'NUMBER', description: 'Calorias totais em kcal (número inteiro)' },
           proteina_g: { type: 'NUMBER', description: 'Proteína em gramas' },
           carboidrato_g: { type: 'NUMBER', description: 'Carboidratos em gramas' },
           gordura_g: { type: 'NUMBER', description: 'Gordura total em gramas' },
-          observacao: { type: 'STRING', description: 'Observação opcional da tabela ou marca' },
+          quantidade_g: { type: 'NUMBER', description: 'Peso total estimado em gramas ou ml consumido' },
+          fibra_g: { type: 'NUMBER', description: 'Fibras em gramas' },
+          sodio_mg: { type: 'NUMBER', description: 'Sódio em miligramas' },
+          confianca: { type: 'STRING', enum: ['alta', 'media', 'baixa'], description: 'Nível de certeza sobre os macronutrientes da porção' },
+          base: { type: 'STRING', enum: ['taco', 'rotulo', 'estimativa'], description: 'Fonte de referência utilizada' },
+          observacao: { type: 'STRING', description: 'Observação opcional da tabela, modo de preparo ou marca' },
         },
         required: ['nome', 'quantidade', 'calorias', 'proteina_g', 'carboidrato_g', 'gordura_g'],
       },
@@ -206,8 +214,9 @@ export async function generateContentWithRetry(params: {
   systemInstruction?: string;
   responseMimeType?: string;
   responseSchema?: any;
+  temperature?: number;
 }): Promise<{ text: string; modelUsed: string; attempts: string[] }> {
-  const { apiKey, contents, systemInstruction, responseMimeType, responseSchema } = params;
+  const { apiKey, contents, systemInstruction, responseMimeType, responseSchema, temperature } = params;
 
   const { candidateList } = await getOrDiscoverModels(apiKey);
 
@@ -219,6 +228,9 @@ export async function generateContentWithRetry(params: {
   }
 
   const generationConfig: any = {};
+  if (typeof temperature === 'number') {
+    generationConfig.temperature = temperature;
+  }
   if (responseMimeType) {
     generationConfig.responseMimeType = responseMimeType;
   }

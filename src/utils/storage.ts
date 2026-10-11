@@ -63,6 +63,8 @@ export function calculateNutritionTotals(meals: Meal[]): DailyNutritionTotals {
   let protein = 0;
   let carbs = 0;
   let fat = 0;
+  let fiber = 0;
+  let sodium = 0;
   let itemsCount = 0;
   let consumedCount = 0;
   let consumedCalories = 0;
@@ -74,6 +76,8 @@ export function calculateNutritionTotals(meals: Meal[]): DailyNutritionTotals {
       if (item.protein) protein += item.protein;
       if (item.carbs) carbs += item.carbs;
       if (item.fat) fat += item.fat;
+      if (item.fibra_g) fiber += item.fibra_g;
+      if (item.sodio_mg) sodium += item.sodio_mg;
 
       if (item.done) {
         consumedCount++;
@@ -87,6 +91,8 @@ export function calculateNutritionTotals(meals: Meal[]): DailyNutritionTotals {
     protein: Math.round(protein),
     carbs: Math.round(carbs),
     fat: Math.round(fat),
+    fiber: fiber > 0 ? Math.round(fiber * 10) / 10 : undefined,
+    sodium: sodium > 0 ? Math.round(sodium) : undefined,
     itemsCount,
     consumedCount,
     consumedCalories: Math.round(consumedCalories),
