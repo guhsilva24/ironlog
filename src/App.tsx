@@ -137,11 +137,11 @@ function AppContent({
   );
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-800 flex flex-col font-sans antialiased pb-20 sm:pb-8">
+    <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans antialiased pb-24 sm:pb-8">
       {/* Top Header */}
       <header
         id="app-header"
-        className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs"
+        className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-2xs"
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -149,7 +149,7 @@ function AppContent({
               <Dumbbell className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
                 IronLog
               </h1>
             </div>
@@ -293,9 +293,9 @@ function AppContent({
               onClick={() => handleOpenCalendar()}
               aria-label="Abrir calendário de rotina"
               title="Abrir calendário mensal de rotina"
-              className="p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+              className="min-h-[44px] min-w-[44px] p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs select-none"
             >
-              <Calendar className="w-4 h-4 text-orange-600" />
+              <Calendar className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               <span className="hidden md:inline text-xs font-semibold">Calendário</span>
             </button>
 
@@ -306,7 +306,7 @@ function AppContent({
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
               title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+              className="min-h-[44px] min-w-[44px] p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs select-none"
             >
               {theme === 'dark' ? (
                 <>
@@ -315,7 +315,7 @@ function AppContent({
                 </>
               ) : (
                 <>
-                  <Moon className="w-4 h-4 text-slate-600 animate-in spin-in-180 duration-200" />
+                  <Moon className="w-4 h-4 text-slate-600 dark:text-slate-300 animate-in spin-in-180 duration-200" />
                   <span className="hidden md:inline text-xs font-semibold">Escuro</span>
                 </>
               )}
@@ -386,17 +386,17 @@ function AppContent({
       {/* Mobile Bottom Navigation Bar */}
       <nav
         id="mobile-nav"
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 px-2 py-1.5 flex items-center justify-around shadow-lg"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-1 py-1 flex items-center justify-around shadow-lg"
       >
         <button
           id="mobile-tab-treino"
           type="button"
           onClick={() => setActiveTab('treino')}
-          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'treino' ? 'text-orange-600 font-bold' : 'text-slate-400 font-medium'
+          className={`min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'treino' ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'
           }`}
         >
-          <Dumbbell className="w-4 h-4" />
+          <Dumbbell className="w-5 h-5" />
           <span className="text-[10px]">Treino</span>
         </button>
 
@@ -404,11 +404,11 @@ function AppContent({
           id="mobile-tab-dieta"
           type="button"
           onClick={() => setActiveTab('dieta')}
-          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'dieta' ? 'text-emerald-600 font-bold' : 'text-slate-400 font-medium'
+          className={`min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'dieta' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'
           }`}
         >
-          <Utensils className="w-4 h-4" />
+          <Utensils className="w-5 h-5" />
           <span className="text-[10px]">Nutrição</span>
         </button>
 
@@ -416,11 +416,11 @@ function AppContent({
           id="mobile-tab-agua"
           type="button"
           onClick={() => setActiveTab('agua')}
-          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'agua' ? 'text-sky-600 font-bold' : 'text-slate-400 font-medium'
+          className={`min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'agua' ? 'text-sky-600 dark:text-sky-400 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'
           }`}
         >
-          <Droplets className="w-4 h-4" />
+          <Droplets className="w-5 h-5" />
           <span className="text-[10px]">Água</span>
         </button>
 
@@ -428,11 +428,11 @@ function AppContent({
           id="mobile-tab-progresso"
           type="button"
           onClick={() => setActiveTab('progresso')}
-          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'progresso' ? 'text-amber-600 font-bold' : 'text-slate-400 font-medium'
+          className={`min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'progresso' ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'
           }`}
         >
-          <BarChart3 className="w-4 h-4" />
+          <BarChart3 className="w-5 h-5" />
           <span className="text-[10px]">Progresso</span>
         </button>
 
@@ -440,12 +440,12 @@ function AppContent({
           id="mobile-tab-chat"
           type="button"
           onClick={() => setActiveTab('chat')}
-          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all cursor-pointer relative ${
-            activeTab === 'chat' ? 'text-violet-600 font-bold' : 'text-slate-400 font-medium'
+          className={`min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+            activeTab === 'chat' ? 'text-violet-600 dark:text-violet-400 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'
           }`}
         >
           <div className="relative">
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-5 h-5" />
             {hasUnreadReply && activeTab !== 'chat' && (
               <span
                 id="mobile-chat-unread-dot"
@@ -461,11 +461,11 @@ function AppContent({
           id="mobile-tab-resumo"
           type="button"
           onClick={() => setActiveTab('resumo')}
-          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all cursor-pointer ${
-            activeTab === 'resumo' ? 'text-slate-900 font-bold' : 'text-slate-400 font-medium'
+          className={`min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'resumo' ? 'text-slate-900 dark:text-slate-100 font-bold' : 'text-slate-400 dark:text-slate-500 font-medium'
           }`}
         >
-          <LayoutDashboard className="w-4 h-4" />
+          <LayoutDashboard className="w-5 h-5" />
           <span className="text-[10px]">Resumo</span>
         </button>
       </nav>

@@ -976,157 +976,162 @@ export const WorkoutSection: React.FC<WorkoutSectionProps> = ({
                       <div
                         key={exercise.id}
                         id={`exercise-item-${exercise.id}`}
-                        className={`p-4 rounded-xl border transition-all ${
+                        className={`p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 ${
                           exercise.done
-                            ? 'bg-emerald-50/50 border-emerald-200 text-slate-700'
-                            : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                            ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-slate-700 dark:text-slate-200'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          {/* Checkbox and info */}
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
-                            {/* Checkbox "feito hoje" */}
-                            <button
-                              id={`toggle-exercise-${exercise.id}`}
-                              type="button"
-                              onClick={() => handleToggleExerciseDone(exercise.id)}
-                              className={`mt-0.5 flex-shrink-0 cursor-pointer p-1 rounded-lg transition-colors ${
-                                exercise.done
-                                  ? 'text-emerald-600 hover:text-emerald-700'
-                                  : 'text-slate-400 hover:text-slate-600'
-                              }`}
-                              title={
-                                exercise.done ? 'Marcar como não feito' : 'Marcar como feito hoje'
-                              }
-                            >
-                              {exercise.done ? (
-                                <CheckCircle2 className="w-6 h-6 fill-emerald-100 text-emerald-600" />
-                              ) : (
-                                <Circle className="w-6 h-6" />
-                              )}
-                            </button>
+                        {/* Linha 1: Checkbox (ícone de 28px) + nome do exercício (break-words) + selos */}
+                        <div className="flex items-start gap-2.5 sm:gap-3 w-full">
+                          <button
+                            id={`toggle-exercise-${exercise.id}`}
+                            type="button"
+                            onClick={() => handleToggleExerciseDone(exercise.id)}
+                            className={`p-1 -ml-1 rounded-xl transition-colors cursor-pointer shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                              exercise.done
+                                ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700'
+                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                            }`}
+                            title={
+                              exercise.done ? 'Marcar como não feito' : 'Marcar como feito hoje'
+                            }
+                            aria-label={
+                              exercise.done ? 'Marcar como não feito' : 'Marcar como feito hoje'
+                            }
+                          >
+                            {exercise.done ? (
+                              <CheckCircle2 className="w-7 h-7 fill-emerald-100 dark:fill-emerald-900/60 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                              <Circle className="w-7 h-7" />
+                            )}
+                          </button>
 
-                            {/* 1. Marcação por exercício: botão alternar "Falha" ao lado do checkbox */}
-                            <button
-                              id={`toggle-failure-${exercise.id}`}
-                              type="button"
-                              onClick={() => handleToggleFailure(exercise.id)}
-                              disabled={!exercise.done}
-                              title={
-                                !exercise.done
-                                  ? 'Marque o exercício como feito para ativar a marcação de Falha'
-                                  : exercise.failure
-                                  ? 'Falha ativada: clique para desativar'
-                                  : 'Clique para marcar que chegou à falha muscular'
-                              }
-                              className={`mt-1 flex-shrink-0 px-2 py-0.5 text-[11px] font-bold rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
-                                !exercise.done
-                                  ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
-                                  : exercise.failure
-                                  ? 'bg-rose-500 text-white border-rose-600 shadow-xs ring-2 ring-rose-200 dark:ring-rose-950 font-black animate-none scale-102'
-                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300'
-                              }`}
-                            >
-                              <Flame
-                                className={`w-3 h-3 ${
-                                  exercise.failure ? 'fill-white text-white' : 'text-slate-400'
+                          <div className="flex-1 min-w-0 pt-1">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                              <h4
+                                className={`text-base font-bold break-words ${
+                                  exercise.done
+                                    ? 'line-through text-slate-500 dark:text-slate-400'
+                                    : 'text-slate-900 dark:text-slate-100'
                                 }`}
-                              />
-                              <span>Falha</span>
-                            </button>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4
-                                  className={`text-base font-bold ${
-                                    exercise.done ? 'line-through text-slate-500' : 'text-slate-900'
-                                  }`}
-                                >
-                                  {exercise.name}
-                                </h4>
-                                {exercise.done && (
-                                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                    Feito hoje
-                                  </span>
-                                )}
-                                {exercise.failure && (
-                                  <span className="text-[11px] font-black text-rose-700 bg-rose-100 dark:bg-rose-950/80 dark:text-rose-300 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800 flex items-center gap-1">
-                                    🔥 Falha
-                                  </span>
-                                )}
-                                {isNewRecord && (
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-full shadow-2xs">
-                                    🏆 Novo recorde
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Badges: Séries, Repetições, Carga */}
-                              <div className="flex flex-wrap items-center gap-2 mt-2">
-                                <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                                  <Layers className="w-3.5 h-3.5 text-slate-500" />
-                                  {exercise.sets} {Number(exercise.sets) === 1 ? 'série' : 'séries'}
+                              >
+                                {exercise.name}
+                              </h4>
+                              {exercise.done && (
+                                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-full shrink-0">
+                                  Feito hoje
                                 </span>
-
-                                <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                                  <Repeat className="w-3.5 h-3.5 text-slate-500" />
-                                  {exercise.reps} reps
+                              )}
+                              {exercise.failure && (
+                                <span className="text-[11px] font-black text-rose-700 bg-rose-100 dark:bg-rose-950/80 dark:text-rose-300 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800 flex items-center gap-1 shrink-0">
+                                  🔥 Falha
                                 </span>
-
-                                {exercise.weight && (
-                                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-800 bg-orange-100/80 px-2.5 py-1 rounded-lg">
-                                    <Weight className="w-3.5 h-3.5 text-orange-600" />
-                                    {exercise.weight}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Notes */}
-                              {exercise.notes && (
-                                <div className="mt-2 text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-lg p-2 flex items-start gap-1.5">
-                                  <FileText className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
-                                  <span className="whitespace-pre-wrap">{exercise.notes}</span>
-                                </div>
+                              )}
+                              {isNewRecord && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-full shadow-2xs shrink-0">
+                                  🏆 Novo recorde
+                                </span>
                               )}
                             </div>
                           </div>
+                        </div>
 
-                          {/* Action buttons (Evolução, Editar e Excluir) */}
-                          <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-                            {/* 2. Botão de Evolução de Carga */}
-                            <button
-                              id={`evolution-btn-${exercise.id}`}
-                              type="button"
-                              onClick={() => handleOpenEvolution(exercise)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/60 border border-violet-200 dark:border-violet-800 rounded-lg transition-colors cursor-pointer"
-                              title="Ver histórico e evolução deste exercício"
-                            >
-                              <TrendingUp className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Evolução</span>
-                            </button>
+                        {/* Linha 2, largura total do cartão: etiquetas de séries, reps e carga + observação */}
+                        <div className="w-full space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                              <Layers className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                              {exercise.sets} {Number(exercise.sets) === 1 ? 'série' : 'séries'}
+                            </span>
 
-                            <button
-                              id={`edit-exercise-btn-${exercise.id}`}
-                              type="button"
-                              onClick={() => handleOpenEditExercise(exercise)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-                              title="Editar exercício"
-                              aria-label="Editar"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                              <Repeat className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                              {exercise.reps} reps
+                            </span>
 
-                            <button
-                              id={`delete-exercise-btn-${exercise.id}`}
-                              type="button"
-                              onClick={() => handleDeleteExercise(exercise)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Excluir exercício"
-                              aria-label="Excluir"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {exercise.weight && (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-800 dark:text-orange-300 bg-orange-100/80 dark:bg-orange-950/60 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                                <Weight className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
+                                {exercise.weight}
+                              </span>
+                            )}
                           </div>
+
+                          {exercise.notes && (
+                            <div className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-lg p-2.5 flex items-start gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 mt-0.5 shrink-0" />
+                              <span className="whitespace-pre-wrap break-words">{exercise.notes}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Linha 3: botões Falha, Evolução, Editar e Excluir lado a lado (altura mínima 44px) */}
+                        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                          {/* Botão Falha (flex-1 min-w-[96px] min-h-[44px]) */}
+                          <button
+                            id={`toggle-failure-${exercise.id}`}
+                            type="button"
+                            onClick={() => handleToggleFailure(exercise.id)}
+                            disabled={!exercise.done}
+                            title={
+                              !exercise.done
+                                ? 'Marque o exercício como feito para ativar a marcação de Falha'
+                                : exercise.failure
+                                ? 'Falha ativada: clique para desativar'
+                                : 'Clique para marcar que chegou à falha muscular'
+                            }
+                            className={`flex-1 min-w-[96px] min-h-[44px] px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                              !exercise.done
+                                ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                                : exercise.failure
+                                ? 'bg-rose-500 text-white border-rose-600 shadow-xs ring-2 ring-rose-200 dark:ring-rose-950 font-black'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300'
+                            }`}
+                          >
+                            <Flame
+                              className={`w-4 h-4 shrink-0 ${
+                                exercise.failure ? 'fill-white text-white' : 'text-slate-400'
+                              }`}
+                            />
+                            <span>Falha</span>
+                          </button>
+
+                          {/* Botão Evolução (flex-1 min-w-[96px] min-h-[44px]) */}
+                          <button
+                            id={`evolution-btn-${exercise.id}`}
+                            type="button"
+                            onClick={() => handleOpenEvolution(exercise)}
+                            className="flex-1 min-w-[96px] min-h-[44px] px-3 py-2 text-xs font-semibold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/60 border border-violet-200 dark:border-violet-800 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                            title="Ver histórico e evolução deste exercício"
+                          >
+                            <TrendingUp className="w-4 h-4 shrink-0" />
+                            <span>Evolução</span>
+                          </button>
+
+                          {/* Botão Editar (quadrado de 44px) */}
+                          <button
+                            id={`edit-exercise-btn-${exercise.id}`}
+                            type="button"
+                            onClick={() => handleOpenEditExercise(exercise)}
+                            className="w-11 h-11 min-h-[44px] min-w-[44px] shrink-0 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center justify-center"
+                            title="Editar exercício"
+                            aria-label="Editar"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+
+                          {/* Botão Excluir (quadrado de 44px) */}
+                          <button
+                            id={`delete-exercise-btn-${exercise.id}`}
+                            type="button"
+                            onClick={() => handleDeleteExercise(exercise)}
+                            className="w-11 h-11 min-h-[44px] min-w-[44px] shrink-0 rounded-xl text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900 transition-colors cursor-pointer flex items-center justify-center"
+                            title="Excluir exercício"
+                            aria-label="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     );

@@ -154,15 +154,15 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
   return (
     <div id="water-section" className="space-y-6">
       {/* Main card */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 dark:border-slate-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 flex items-center justify-center">
               <Droplets className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Controle de Água</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Controle de Água</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Acompanhe e registre seu consumo diário de líquidos
               </p>
             </div>
@@ -176,9 +176,9 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
                 setNewGoal(String(water.dailyGoalMl));
                 setIsGoalModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700"
             >
-              <Target className="w-3.5 h-3.5 text-sky-600" />
+              <Target className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               Meta: {water.dailyGoalMl} ml
               <Edit2 className="w-3 h-3 text-slate-400" />
             </button>
@@ -188,7 +188,7 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
                 id="reset-water-btn"
                 type="button"
                 onClick={handleResetToday}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer border border-slate-200/80 dark:border-slate-700"
                 title="Resetar consumo de hoje"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -199,17 +199,17 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
         </div>
 
         {/* Visual Progress Display */}
-        <div className="p-6 rounded-2xl bg-gradient-to-b from-sky-50/50 to-sky-100/30 border border-sky-100 text-center space-y-4">
+        <div className="p-6 rounded-2xl bg-gradient-to-b from-sky-50/50 to-sky-100/30 dark:from-sky-950/20 dark:to-sky-900/30 border border-sky-100 dark:border-sky-900/40 text-center space-y-4">
           <div className="inline-flex items-baseline justify-center gap-1.5">
-            <span className="text-5xl sm:text-6xl font-extrabold text-sky-900 tracking-tight">
+            <span className="text-5xl sm:text-6xl font-extrabold text-sky-900 dark:text-sky-200 tracking-tight">
               {water.currentMl}
             </span>
-            <span className="text-lg font-semibold text-sky-600">/ {water.dailyGoalMl} ml</span>
+            <span className="text-lg font-semibold text-sky-600 dark:text-sky-400">/ {water.dailyGoalMl} ml</span>
           </div>
 
           {/* Progress bar */}
           <div className="space-y-1.5 max-w-xl mx-auto">
-            <div className="w-full bg-sky-200/70 h-4 rounded-full overflow-hidden p-0.5 shadow-inner">
+            <div className="w-full bg-sky-200/70 dark:bg-sky-950/60 h-4 rounded-full overflow-hidden p-0.5 shadow-inner">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   isGoalReached ? 'bg-emerald-500' : 'bg-sky-600'
@@ -218,11 +218,11 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400 px-1">
               <span>{percent}% atingido</span>
               <span>
                 {isGoalReached ? (
-                  <span className="text-emerald-700 font-bold inline-flex items-center gap-1">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold inline-flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5" /> Meta batida!
                   </span>
                 ) : (
@@ -233,7 +233,7 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
           </div>
 
           {isGoalReached && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full animate-bounce">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-semibold rounded-full border border-emerald-200 dark:border-emerald-800 animate-bounce">
               <Sparkles className="w-3.5 h-3.5" />
               Parabéns! Você alcançou a meta de hidratação hoje!
             </div>
@@ -242,7 +242,7 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
 
         {/* Quick Add Buttons */}
         <div className="mt-6 space-y-3">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Adicionar rapidamente:
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
@@ -252,12 +252,12 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
                 id={`quick-water-${btn.ml}`}
                 type="button"
                 onClick={() => handleAddWater(btn.ml)}
-                className="py-3 px-2 flex flex-col items-center justify-center bg-slate-50 hover:bg-sky-50 active:scale-95 border border-slate-200 hover:border-sky-300 rounded-xl transition-all cursor-pointer group"
+                className="min-h-[54px] py-3 px-2 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/70 hover:bg-sky-50 dark:hover:bg-sky-950/50 active:scale-95 border border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 rounded-xl transition-all cursor-pointer group"
               >
-                <span className="text-sm font-bold text-slate-800 group-hover:text-sky-700">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-sky-700 dark:group-hover:text-sky-300">
                   {btn.label}
                 </span>
-                <span className="text-[11px] text-slate-400 group-hover:text-sky-600">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 group-hover:text-sky-600 dark:group-hover:text-sky-400">
                   {btn.sub}
                 </span>
               </button>
@@ -266,8 +266,8 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
         </div>
 
         {/* Custom manual addition input */}
-        <form onSubmit={handleCustomSubmit} className="mt-5 pt-5 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+        <form onSubmit={handleCustomSubmit} className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             Ou digite uma quantidade personalizada:
           </label>
           <div className="flex items-center gap-2 max-w-md">
@@ -281,9 +281,9 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
                 placeholder="Ex: 350"
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent pr-10"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent pr-10"
               />
-              <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold">
+              <span className="absolute right-3 top-2.5 text-xs text-slate-400 dark:text-slate-500 font-semibold">
                 ml
               </span>
             </div>
@@ -291,7 +291,7 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
               id="add-custom-water-btn"
               type="submit"
               disabled={!customAmount.trim()}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:pointer-events-none rounded-xl transition-colors cursor-pointer shadow-xs"
+              className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:pointer-events-none rounded-xl transition-colors cursor-pointer shadow-xs"
             >
               <Plus className="w-4 h-4" />
               Adicionar
@@ -302,12 +302,12 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
 
       {/* History log for today */}
       {water.logs.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 dark:border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-700">
+            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">
               Registros de Água de Hoje ({water.logs.length})
             </h3>
-            <span className="text-xs text-slate-400">Toque na lixeira para corrigir engano</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">Toque na lixeira para corrigir engano</span>
           </div>
 
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -315,14 +315,14 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
               <div
                 key={log.id}
                 id={`water-log-${log.id}`}
-                className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs text-slate-700"
+                className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-700 dark:text-slate-200"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 flex items-center justify-center">
                     <Droplets className="w-3.5 h-3.5" />
                   </div>
-                  <span className="font-bold text-slate-800">+{log.amountMl} ml</span>
-                  <span className="text-slate-400 flex items-center gap-1">
+                  <span className="font-bold text-slate-800 dark:text-slate-100">+{log.amountMl} ml</span>
+                  <span className="text-slate-400 dark:text-slate-500 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {log.timestamp}
                   </span>
@@ -332,11 +332,11 @@ export const WaterSection: React.FC<WaterSectionProps> = ({ water, onUpdateWater
                   id={`delete-water-log-${log.id}`}
                   type="button"
                   onClick={() => handleDeleteLog(log.id)}
-                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
                   title="Desfazer este registro"
                   aria-label="Desfazer registro"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}
